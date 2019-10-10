@@ -40,7 +40,7 @@ colorlog==4.0.2
 configparser==3.5.3
 contextlib2==0.5.5
 croniter==0.3.30
-cryptography==2.2.2
+cryptography==2.3
 cycler==0.10.0
 Cython==0.28.2
 cytoolz==0.9.0.1
