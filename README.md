@@ -14,5 +14,4 @@ Now enter:
 > git clone https://github.com/genughaben/world-development.git
 > conda create --name world python=3.6.6
 > conda activate world
-> pip install -r requirements.txt
 ```
