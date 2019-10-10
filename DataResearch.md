@@ -1,7 +1,5 @@
 Do and how does temperature and temperature change the societies and economies of the world?
 
-
-
 Climate Change: Earth Surface Temperature Data
 Exploring global temperatures since 1750
 https://www.kaggle.com/berkeleyearth/climate-change-earth-surface-temperature-data

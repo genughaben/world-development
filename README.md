@@ -15,3 +15,10 @@ Now enter:
 > conda create --name world python=3.6.6
 > conda activate world
 ```
+
+
+
+
+
+Further reading: 
+* https://blog.usejournal.com/testing-in-airflow-part-1-dag-validation-tests-dag-definition-tests-and-unit-tests-2aa94970570c
