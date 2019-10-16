@@ -2,8 +2,7 @@
 
 ## Requirements:
 * This tutorial assumes a Ubuntu installation (specifically: 18.04)
-* Assumes pip is installed
-* Assumes a conda/anaconda installation
+* Assumes pipenv
 
 ## Get code and setup basics:
 
@@ -12,8 +11,8 @@ Now enter:
 
 ```
 > git clone https://github.com/genughaben/world-development.git
-> conda create --name world python=3.6.6
-> conda activate world
+> pipenv install
+> pipenv shell
 ```
 
 
