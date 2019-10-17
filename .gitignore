@@ -2,6 +2,7 @@
 
 data/
 config.cfg
+local/logs/
 
 
 # Byte-compiled / optimized / DLL files

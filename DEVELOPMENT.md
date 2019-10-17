@@ -5,9 +5,9 @@
 ### Using Spark and Airflow on AWS
 
 Sources:
-* https://aws.amazon.com/de/blogs/big-data/build-a-concurrent-data-orchestration-pipeline-using-amazon-emr-and-apache-livy/
-* https://github.com/aws-samples/aws-concurrent-data-orchestration-pipeline-emr-livy
-* https://livy.apache.org/examples/
+* [https://aws.amazon.com/de/blogs/big-data/build-a-concurrent-data-orchestration-pipeline-using-amazon-emr-and-apache-livy/]
+* [https://github.com/aws-samples/aws-concurrent-data-orchestration-pipeline-emr-livy]
+* [https://livy.apache.org/examples/]
 
 
 ### Merging Dimension Table from different sources:

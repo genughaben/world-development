@@ -28,6 +28,21 @@ NB: config.cfg is automatically excluded from git repo. If you should use anothe
   
 # Local ETL
 
+## Local airflow
+Start airflow locally:
+```
+> cd airflow/local
+> docker build -t puckel/docker-airflow . && docker-compose up -d
+```
+Now you can reach airflow in your browser entering: localhost:8080/admin.
+
+**Sources:** Installation is based on [https://github.com/puckel/docker-airflow]
+
+## Configure local airflow
+
+
+## DEVELOPMENT: SCRIPT BASED
+
 Prerequisits:
 * Make sure you have a local installation of PostgreSQL and its running. This means entering the following should not result in an error and open PostgreSQLs CLI:
 
@@ -65,6 +80,9 @@ If you have customized your config.cfg as required you can run:
 ```
   
 to execute the spark based etl script.
+
+
+
 
 
 
