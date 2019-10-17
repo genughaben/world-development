@@ -17,6 +17,9 @@ pandas-profiling = "*"
 jupyter-contrib-nbextensions = "*"
 nbresuse = "*"
 boto3 = "*"
+psycopg2-binary = "*"
+sqlalchemy = "*"
+pyspark = "*"
 
 [requires]
 python_version = "3.6"
