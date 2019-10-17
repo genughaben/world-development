@@ -1,7 +1,16 @@
 import psycopg2
+import configparser
 from sql_queries import create_table_queries, drop_table_queries
+from sqlalchemy import create_engine
 
+config = configparser.ConfigParser()
+config.read('config.cfg')
+input_data = config['PATH']['COMMODITIES_DATA']
 
+db_prop = config['POSTGRESQL']
+user = db_prop['username']
+password = db_prop['password']
+dbname = db_prop['dbname']
 
 
 def create_database():
@@ -14,41 +23,39 @@ def create_database():
     except:
         pass
 
-    conn = psycopg2.connect("host=127.0.0.1 dbname=dummy user=genughaben password=")
-    conn.set_session(autocommit=True)
-    cur = conn.cursor()
+    try:
+        engine = create_engine(f'postgresql://{user}:{password}@127.0.0.1:5432/dummy')
+    except:
+        print("Could not connect to dummy Database - maybe it was not created?")
 
+    conn = engine.connect().execution_options(isolation_level="AUTOCOMMIT")
     # create sparkify database with UTF8 encoding
-    cur.execute("DROP DATABASE IF EXISTS world")
-    cur.execute("CREATE DATABASE world WITH ENCODING 'utf8' TEMPLATE template0")
+    conn.execute("DROP DATABASE IF EXISTS world")
+    conn.execute("CREATE DATABASE world WITH ENCODING 'utf8' TEMPLATE template0")
 
     # close connection to default database
     conn.close()
 
     # connect to sparkify database
-    conn = psycopg2.connect("host=127.0.0.1 dbname=world user=genughaben password=")
-    cur = conn.cursor()
+    engine = create_engine(f'postgresql://{user}:{password}@127.0.0.1:5432/{dbname}')
 
-    return cur, conn
+    return engine
 
 
-def drop_tables(cur, conn):
+def drop_tables(conn):
     """Drops tables.
     Drops all tables using pre-defined drop table queries.
     """
     for query in drop_table_queries:
-        cur.execute(query)
-        conn.commit()
+        conn.execute(query)
 
 
-def create_tables(cur, conn):
+def create_tables(conn):
     """Creates tables
     Creates all tables using pre-defined drop table queries.
     """
-
     for query in create_table_queries:
-        cur.execute(query)
-        conn.commit()
+        conn.execute(query)
 
 
 def main():
@@ -61,11 +68,11 @@ def main():
     except:
         pass
 
-    cur, conn = create_database()
+    engine = create_database()
+    conn = engine.connect()
 
-    drop_tables(cur, conn)
-    create_tables(cur, conn)
-
+    drop_tables(conn)
+    create_tables(conn)
     conn.close()
 
 
