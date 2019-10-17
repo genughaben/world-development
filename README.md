@@ -15,6 +15,36 @@ Now enter:
 > pipenv shell
 ```
 
+## Create and setup config.cfg
+
+Copy and customize config values:
+```
+>  cp config_template.cfg config.cfg 
+```
+
+Now, customize values in the newly created config.cfg as required.
+  
+NB: config.cfg is automatically excluded from git repo. If you should use another name, add it got .gitignore and update config variable usage across project.
+  
+
+# Development Utils
+
+Using local PostgreSQL for testing purposes
+Enter CLI:
+```
+> sudo -u postgres psql 
+```
+  
+Helpful commands:  
+    
+| command | comment |
+|----------|-----------------|
+|\du | show user|
+|\l | displays list of databases|
+| \c <database_name> | choose database for usage |
+|\dt | show tables |
+|\d <table_name> | show table schema|
+
 
 
 
