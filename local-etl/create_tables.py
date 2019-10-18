@@ -3,20 +3,17 @@ import configparser
 from sql_queries import create_table_queries, drop_table_queries
 from sqlalchemy import create_engine
 
-config = configparser.ConfigParser()
-config.read('config.cfg')
-input_data = config['PATH']['COMMODITIES_DATA']
-
-db_prop = config['POSTGRESQL']
-user = db_prop['username']
-password = db_prop['password']
-dbname = db_prop['dbname']
 
 
-def create_database():
+
+def create_database(db_prop):
     """Creates database.
     Connects to database. Drops existing and recreates database.
     """
+    user = db_prop['username']
+    password = db_prop['password']
+    dbname = db_prop['dbname']
+
     # connect to default database
     try:
         conn.close()
@@ -28,9 +25,10 @@ def create_database():
     except:
         print("Could not connect to dummy Database - maybe it was not created?")
 
+    print("helllo!")
     conn = engine.connect().execution_options(isolation_level="AUTOCOMMIT")
     # create sparkify database with UTF8 encoding
-    conn.execute("DROP DATABASE IF EXISTS world")
+    conn.execute("DROP DATABASE IF EXISTS world;")
     conn.execute("CREATE DATABASE world WITH ENCODING 'utf8' TEMPLATE template0")
 
     # close connection to default database
@@ -68,7 +66,13 @@ def main():
     except:
         pass
 
-    engine = create_database()
+    config = configparser.ConfigParser()
+    config.read('config.cfg')
+    input_data = config['PATH']['COMMODITIES_DATA']
+
+    db_prop = config['POSTGRESQL']
+
+    engine = create_database(db_prop)
     conn = engine.connect()
 
     drop_tables(conn)

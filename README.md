@@ -46,7 +46,7 @@ Now you can reach airflow in your browser entering: localhost:8080/admin.
 
 **Sources:** Installation is based on [https://github.com/puckel/docker-airflow]
 
-## Configure local airflow
+## Configure target PostgreSQL setup
 
 * Update init.sql as you please
 * Update requirements.txt as you please
@@ -58,6 +58,22 @@ Make sure your docker-container is running
 > docker exec -it local_db_1 bash
 bash> psql -U postgres
 ```
+
+## Configure airflow via UI:
+
+Goto localhost:8080/admin
+* Open Admin -> Connections
+* Create new connection with clicking on "Create"
+  
+|Field    |Field value|
+|---------|-----------|
+|Conn Id  | postgres  |
+|Conn Type| Postgres  |
+|Host     | db        |
+|Schema   | dummy     |
+|Login    | postgres  |
+|Password | postgres  |
+|Port     | 5432      |
 
 
 ## DEVELOPMENT: SCRIPT BASED
@@ -107,6 +123,100 @@ to execute the spark based etl script.
 
 
 # Development Utils
+
+#### Install and setup Postgresql DB
+```
+> sudo apt-get install postgresql postgresql-contrib
+```
+Creating a role:
+```
+> sudo -u postgres psql
+```
+
+Create a Postgres user for airflow (still in psql console)
+
+```
+postgres=# CREATE USER <your-user-name> PASSWORD <your password>;
+CREATE ROLE
+postgres=# CREATE DATABASE <your-db-name>;
+CREATE DATABASE
+postgres=# GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO <your-user-name>;
+GRANT
+postgres=# \du
+ List of roles
+ Role name | Attributes | Member of
+ — — — — — -+ — — — — — — — — — — — — — — — — — — — — — — — — — — — — — — + — — — — — -
+ <your-user-name> | | {}
+ postgres | Superuser, Create role, Create DB, Replication, Bypass RLS | {}
+```
+
+Add CREATE DB rights to <your-user-name>:
+```
+psql> ALTER USER <your-user-name> CREATEDB; 
+```
+
+Not exit console and check whether database is setup and can be accessed by user <your-user-name>
+
+```
+> psql -d airflow
+psql (10.10 (Ubuntu 10.10-0ubuntu0.18.04.1))
+Type "help" for help.
+airflow=> \conninfo
+```
+
+You should see something like this:
+```
+You are connected to database "airflow" as user "<your-user-name> " via socket in "/var/run/postgresql" at port "5432".
+airflow=>
+```
+
+#### Configure pg_hba.conf and postgresql.conf
+
+##### pg_hba.conf
+In order to allow airflow access to Postgres, pg_hba.conf needs to be configured:
+
+```
+> sudo nano /etc/postgresql/10/main/pg_hba.conf
+```
+
+Change int entry 'IPv4 local connections' the ADDRESS to 0.0.0.0/0 and the METHOD to trust.
+In the end there should be:
+```
+# IPv4 local connections:
+TYPE    DATABASE    USER    ADDRESS     METHOD
+...
+# IPv4 local connections                            <- replace line after this with next line
+host    all         all     0.0.0.0/0   trust       <- use this line as replacement
+```
+
+You now need to restart Postgres entering:
+
+```
+> sudo service postgresql restart
+```
+
+##### postgresql.conf
+
+Open postgresql.conf entering:
+
+```
+> sudo nano /etc/postgresql/10/main/postgresql.conf
+```
+
+Update in the section 'CONNECTIONS AND AUTHENTICATION' listen_addresses from 'localhost' to '*'
+```
+# — Connection Settings -
+#listen_addresses = ‘localhost’     # what IP address(es) to listen on;           <-- before
+listen_addresses  = ‘*’             # for Airflow connection                      <-- after
+```
+
+And restart Postgres again:
+```
+> sudo service postgresql restart
+```
+
+Based on https://medium.com/@taufiq_ibrahim/apache-airflow-installation-on-ubuntu-ddc087482c14  
+Also helpful: https://medium.com/@srivathsankr7/apache-airflow-a-practical-guide-5164ff19d18b
 
 Using local PostgreSQL for testing purposes
 Enter CLI:

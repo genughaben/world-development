@@ -35,18 +35,7 @@ commodities_staging_table_create = ("""
 
 
 
-commodities_staging_table_insert = ("""INSERT INTO commodities_staging (
-                                                        country_or_area, 
-                                                        year, 
-                                                        comm_code, 
-                                                        commodity, 
-                                                        flow, 
-                                                        trade_usd, 
-                                                        weight_kg, 
-                                                        quantity_name, 
-                                                        quantity, 
-                                                        category)
-                                VALUES ('%s', %s, '%s', '%s', '%s', %s, %s, '%s', %s, '%s');""")
+commodities_staging_table_insert = ("""INSERT INTO commodities_staging (country_or_area, year, comm_code, commodity, flow, trade_usd, weight_kg, quantity_name, quantity, category) VALUES ('%s', %s, '%s', '%s', '%s', %s, %s, '%s', %s, '%s');""")
 
 
 create_table_queries = [commodities_staging_table_create]

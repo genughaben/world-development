@@ -20,6 +20,7 @@ boto3 = "*"
 psycopg2-binary = "*"
 sqlalchemy = "*"
 pyspark = "*"
+tqdm = "*"
 
 [requires]
 python_version = "3.6"
