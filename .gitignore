@@ -3,6 +3,7 @@
 data/
 config.cfg
 local/logs/
+airflow/local/logs/
 
 
 # Byte-compiled / optimized / DLL files

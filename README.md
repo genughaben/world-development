@@ -28,17 +28,36 @@ NB: config.cfg is automatically excluded from git repo. If you should use anothe
   
 # Local ETL
 
-## Local airflow
+## Local airflow + local target PostgreSQL in docker containers
+
+Setup:
+```
+> docker build --rm --build-arg AIRFLOW_DEPS="datadog,dask" -t puckel/docker-airflow .
+> docker build --rm --build-arg PYTHON_DEPS="flask_oauthlib>=0.9" -t puckel/docker-airflow .
+```
+
 Start airflow locally:
 ```
 > cd airflow/local
-> docker build -t puckel/docker-airflow . && docker-compose up -d
+> docker-compose -f docker-compose-LocalExecutor.yml up
 ```
+
 Now you can reach airflow in your browser entering: localhost:8080/admin.
 
 **Sources:** Installation is based on [https://github.com/puckel/docker-airflow]
 
 ## Configure local airflow
+
+* Update init.sql as you please
+* Update requirements.txt as you please
+
+## Enter PostgreSQL in docker container:
+
+Make sure your docker-container is running
+```
+> docker exec -it local_db_1 bash
+bash> psql -U postgres
+```
 
 
 ## DEVELOPMENT: SCRIPT BASED

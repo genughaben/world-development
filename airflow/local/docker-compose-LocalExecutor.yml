@@ -6,7 +6,6 @@ services:
             - POSTGRES_USER=airflow
             - POSTGRES_PASSWORD=airflow
             - POSTGRES_DB=airflow
-
     webserver:
         image: puckel/docker-airflow:1.10.4
         restart: always
@@ -19,6 +18,7 @@ services:
             - ../dags:/usr/local/airflow/dags
             - ../plugins:/usr/local/airflow/plugins
             - ./logs:/usr/local/airflow/logs
+            - ../../requirements.txt:/requirements.txt
         ports:
             - "8080:8080"
         command: webserver
@@ -27,3 +27,17 @@ services:
             interval: 30s
             timeout: 30s
             retries: 3
+
+    db:
+        image: postgres:10.10-alpine
+        restart: always
+        environment:
+            POSTGRES_DB: 'postgres'
+            POSTGRES_USER: 'postgres'
+            POSTGRES_PASSWORD: 'postgres'
+        ports:
+            - "5433:5433"
+        volumes:
+           # - /var/lib/postgresql/10/main:/var/lib/postgresql/data
+            - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
