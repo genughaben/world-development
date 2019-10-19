@@ -73,6 +73,7 @@ RUN set -ex \
 COPY script/entrypoint.sh /entrypoint.sh
 COPY config/airflow.cfg ${AIRFLOW_USER_HOME}/airflow.cfg
 COPY init.sql /docker-entrypoint-initdb.d/
+COPY ../../data/commodity_trade_statistics_data.csv data/commodity_trade_statistics_data.csv
 
 RUN chown -R airflow: ${AIRFLOW_USER_HOME}
 

@@ -1,4 +1,5 @@
 import datetime
+import os
 import logging
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
@@ -6,15 +7,65 @@ from airflow.hooks.postgres_hook import PostgresHook
 from airflow.operators.postgres_operator import PostgresOperator
 from airflow.operators.python_operator import PythonOperator
 
-#
-# def load_data_to_postgres(*args, **kwargs):
-#     conn = PostgresHook(postgres_conn_id='postgres', schema='dummy').get_conn()
-#     query = 'INSERT INTO test (value) VALUES ("hahahah");'
-#     cursor = conn.cursor("serverCursor")
-#     cursor.execute(query)
-#     cursor.close()
-#     conn.close()
 
+# todo: implement task to correct input format
+# * remove rows with to little entries
+# * escape quotes
+
+def load_test_to_postgres(*args, **kwargs):
+    conn = PostgresHook(postgres_conn_id='postgres', schema='dummy').get_conn()
+    query = 'INSERT INTO test (value) VALUES ("hahahah");'
+    cursor = conn.cursor("serverCursor")
+    cursor.execute(query)
+    cursor.close()
+    conn.close()
+
+def display_count(*args, **kwargs):
+    conn = PostgresHook(postgres_conn_id='postgres', schema='dummy').get_conn()
+    query = 'SELECT count(*) FROM commodities_staging';
+    count = conn.get_first(query)[0]
+    print(f"result of {query} is {count}")
+    conn.close()
+    return True
+
+
+def inspect_folder():
+    print(os.getcwd())
+    print(os.listdir())
+    print(os.listdir('dags/'))
+    print(os.listdir('dags/data/'))
+    print()
+
+# client side
+def copy_task_with_client_file():
+    conn = PostgresHook(postgres_conn_id='postgres', schema='dummy').get_conn()
+    table = "commodities_staging"
+    # path to file on client system
+    file_path = "/usr/local/airflow/dags/commodity_trade_statistics_data.csv"
+    cur = conn.cursor()
+
+    with open(file_path, 'r') as f:
+        next(f)
+        cur.copy_from(f, 'commodities_staging', sep=',')
+        conn.commit()
+
+    conn.close()
+
+# server side
+def copy_task_with_server_file():
+    conn = PostgresHook(postgres_conn_id='postgres', schema='dummy')
+    table = "commodities_staging"
+    file_path = "/data/test/commodity_trade_statistics_data.csv"
+
+    query = (
+        f"COPY {table} "
+        f"FROM '{file_path}' "
+        f"CSV HEADER; "
+    )
+    logging.info(f"Executing: {query}")
+    print(dir(conn))
+    conn.run(query)
+    conn.close()
 
 dag = DAG(
     "test_postgres_dag",
@@ -22,36 +73,27 @@ dag = DAG(
     start_date=datetime.datetime.now() - datetime.timedelta(days=1)
 )
 
-count_task1 = PostgresOperator(
-    task_id='count_table_lines1',
-    sql=
-    """
-        SELECT COUNT(*) FROM test;
-        INSERT INTO test (value) VALUES ('test');
-        SELECT COUNT(*) FROM test;
-    """,
-    postgres_conn_id='postgres',
-    autocommit=True,
-    dag=dag,
+ls_task = PythonOperator(
+    task_id="inspect_folder",
+    python_callable=inspect_folder,
+    dag=dag
 )
 
-# etl_task = PythonOperator(
-#     task_id='etl',
-#     provide_context=True,
-#     python_callable=load_data_to_postgres,
-#     dag=dag)
-#
-# count_task2= PostgresOperator(
-#     task_id='count_table_lines2',
-#     sql=
-#     """
-#     SELECT COUNT(*) FROM dummy.test
-#     """,
-#     postgres_conn_id='postgres',
-#     autocommit=True,
-#     dag=dag,
-# )
+copy_csv_task = PythonOperator(
+    task_id="copy_csv",
+    python_callable=copy_task_with_server_file,
+    dag=dag
+)
+
+count_records_task = PythonOperator(
+    task_id='count_records',
+    provide_context=True,
+    python_callable=display_count,
+    dag=dag)
+
 
 start_operator = DummyOperator(task_id='Begin_execution',  dag=dag)
 
-start_operator >> count_task1
+start_operator >> ls_task
+ls_task >> copy_csv_task
+copy_csv_task >> count_records_task

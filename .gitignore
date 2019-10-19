@@ -4,6 +4,7 @@ data/
 config.cfg
 local/logs/
 airflow/local/logs/
+*.csv
 
 
 # Byte-compiled / optimized / DLL files
