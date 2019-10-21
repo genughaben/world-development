@@ -19,6 +19,7 @@ services:
             - ../plugins:/usr/local/airflow/plugins
             - ./logs:/usr/local/airflow/logs
             - ../../requirements.txt:/requirements.txt
+            - ./spark_scripts:/usr/local/airflow/simple-app
         ports:
             - "8080:8080"
         command: webserver
@@ -41,4 +42,14 @@ services:
            # - /var/lib/postgresql/10/main:/var/lib/postgresql/data
             - ./init.sql:/docker-entrypoint-initdb.d/init.sql
             - ../../data:/data
-
+    spark:
+        image: bde2020/spark-master:latest
+        environment:
+            - PYSPARK_PYTHON=python3
+            - SPARK_HOME=/spark
+            - API_VERSION=auto
+        volumes:
+            - ./spark_scripts:/simple-app
+            - ./spark_jars:/spark_jars
+            - ../dags/data:/data
+        #command: /spark/bin/spark-submit --master local[*] /simple-app/SimpleApp.py

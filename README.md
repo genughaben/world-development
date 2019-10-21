@@ -116,10 +116,21 @@ If you have customized your config.cfg as required you can run:
   
 to execute the spark based etl script.
 
+### SPARK CONTAINER:
+The spark container has its origin in the image of bde2020/spark-master:latest and is defined in   
+docker-compose-LocalExecutor.yml
+  
+It uses spark_jars defined in /spark_jars  
+and spark_scripts and config files in spark_scripts (mounted as volumes)  
+  
+Spark submit:  
+```
+# First enter container:
+>  docker exec -it local_spark_1 bash
 
-
-
-
+# Next execute spark script like so:
+> /spark/bin/spark-submit --master local[*] --driver-class-path /spark_jars/postgresql-42.2.8.jar /simple-app/stage_commodities.py
+```
 
 
 # Development Utils

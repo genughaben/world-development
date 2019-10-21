@@ -1,4 +1,4 @@
-CREATE USER genughaben PASSWORD '';
+CREATE USER genughaben PASSWORD 'docker';
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO genughaben;
 ALTER USER genughaben CREATEDB;
 CREATE DATABASE dummy;

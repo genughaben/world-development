@@ -21,6 +21,8 @@ psycopg2-binary = "*"
 sqlalchemy = "*"
 pyspark = "*"
 tqdm = "*"
+docker-py = "*"
+docker = "*"
 
 [requires]
 python_version = "3.6"
