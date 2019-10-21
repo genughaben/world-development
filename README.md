@@ -30,16 +30,21 @@ NB: config.cfg is automatically excluded from git repo. If you should use anothe
 
 ## Local airflow + local target PostgreSQL in docker containers
 
-Setup:
+### Setup:
 ```
 > docker build --rm --build-arg AIRFLOW_DEPS="datadog,dask" -t puckel/docker-airflow .
 > docker build --rm --build-arg PYTHON_DEPS="flask_oauthlib>=0.9" -t puckel/docker-airflow .
 ```
 
-Start airflow locally:
+### Start airflow / spark / target db locally:
 ```
 > cd airflow/local
-> docker-compose -f docker-compose-LocalExecutor.yml up
+> docker-compose -f docker-compose-LocalExecutor.yml up (--force-recreate - to reinit dbs after docker-compose ...  down)
+```
+
+### Stop airflow / spark / target db locally:
+```
+> docker-compose -f docker-compose-LocalExecutor.yml down
 ```
 
 Now you can reach airflow in your browser entering: localhost:8080/admin.
