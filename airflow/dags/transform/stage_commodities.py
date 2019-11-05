@@ -14,7 +14,8 @@ def create_spark_sql_context():
     '''
 
     config = configparser.ConfigParser()
-    config.read('config.cfg')
+    CONFIG_PATH = os.path.expanduser('~/config.cfg')
+    config.read(CONFIG_PATH)
 
     spark_prop = config['SPARK']
     jdbc_driver_jar_path = spark_prop['jdbc_driver_jar_path']
@@ -40,7 +41,8 @@ def spark_commodities_etl():
     sqlContext = create_spark_sql_context()
 
     config = configparser.ConfigParser()
-    config.read('config.cfg')
+    CONFIG_PATH = os.path.expanduser('~/config.cfg')
+    config.read(CONFIG_PATH)
 
     commodities_data = config['PATH']['COMMODITIES_DATA']
 

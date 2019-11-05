@@ -41,7 +41,7 @@ def copy_task_with_client_file():
     conn = PostgresHook(postgres_conn_id='postgres', schema='dummy').get_conn()
     table = "commodities_staging"
     # path to file on client system
-    file_path = "/usr/local/airflow/dags/commodity_trade_statistics_data.csv"
+    file_path = "/usr/local/airflow/dags/data/test/commodity_trade_statistics_data.csv"
     cur = conn.cursor()
 
     with open(file_path, 'r') as f:
@@ -68,7 +68,7 @@ def copy_task_with_server_file():
     conn.close()
 
 dag = DAG(
-    "test_postgres_dag",
+    "postgres_with_local_data_dag",
     schedule_interval='@weekly',
     start_date=datetime.datetime.now() - datetime.timedelta(days=1)
 )

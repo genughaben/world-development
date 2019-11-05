@@ -1,9 +1,19 @@
 # CUSTOM:
 
-data/
+!data/
+data/*
+!data/helper/
+data/helper/*
+!data/helper/__init__.py
+!data/helper/create_test_data.py
+!data/helper/load_to_s3.py
+
+airflow/docker/spark/dependencies/*
+
 config.cfg
-local/logs/
-airflow/local/logs/
+config_local.cfg
+docker/logs/
+airflow/docker/logs/
 *.csv
 
 

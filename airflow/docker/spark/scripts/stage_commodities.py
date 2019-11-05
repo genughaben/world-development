@@ -1,14 +1,23 @@
-import datetime
-
-from airflow import DAG
 import os
 import configparser
 from pyspark.sql import SparkSession, SQLContext
 from pyspark.sql.types import StructType, StructField
 from pyspark.sql.types import DoubleType, IntegerType, StringType
-from airflow.operators.python_operator import PythonOperator
 
+import argparse
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--s3_path", help="S3 Path to the CSV resource to read in for commodity stage.")
+args = parser.parse_args()
+if args.s3_path:
+    s3_path = args.s3_path
+else:
+    s3_path = "s3a://world-development/input_data/test/commodity_trade_statistics_data.csv"
+
+CONFIG_PATH=os.path.expanduser('~/config.cfg')
+print(f"path: {CONFIG_PATH}")
+config = configparser.ConfigParser()
+config.read(CONFIG_PATH)
 
 def create_spark_sql_context():
     '''Creates a Spark session.
@@ -16,21 +25,18 @@ def create_spark_sql_context():
     * spark -- Spark session.
     '''
 
-    print("\n\nHello\n\n")
-    config = configparser.ConfigParser()
-    config.read('config.cfg')
-    print(f"\n\nHello {config} .. Bye\n\n")
-    print(f"sup {config['SPARK']} sub")
-
     spark_prop = config['SPARK']
     jdbc_driver_jar_path = spark_prop['jdbc_driver_jar_path']
 
-    os.environ['PYSPARK_SUBMIT_ARGS'] = f'--jars file:///{jdbc_driver_jar_path} pyspark-shell'
+    os.environ['PYSPARK_SUBMIT_ARGS'] = f'--jars file:///{os.path.expanduser(jdbc_driver_jar_path)} pyspark-shell'
     os.environ['SPARK_CLASSPATH'] = jdbc_driver_jar_path
 
     sparkSession = SparkSession \
         .builder \
         .config("spark.jars.packages", "org.apache.hadoop:hadoop-aws:2.7.0") \
+        .config("spark.hadoop.fs.s3a.access.key", config['AWS']['KEY']) \
+        .config("spark.hadoop.fs.s3a.secret.key",  config['AWS']['SECRET']) \
+        .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem") \
         .config('spark.network.timeout', '600s') \
         .config('spark.executor.heartbeatInterval', '60s') \
         .getOrCreate()
@@ -45,10 +51,7 @@ def create_spark_sql_context():
 def spark_commodities_etl():
     sqlContext = create_spark_sql_context()
 
-    config = configparser.ConfigParser()
-    config.read('config.cfg')
-
-    commodities_data = config['PATH']['COMMODITIES_DATA']
+    #commodities_data_path = "s3a://world-development/input_data/test/commodity_trade_statistics_data.csv"
 
     ### READ CSV to PySpark DataFrame
 
@@ -65,7 +68,7 @@ def spark_commodities_etl():
         StructField("category", StringType(), False)
     ])
 
-    df = sqlContext.read.format("com.databricks.spark.csv").csv(commodities_data, header=True, schema=schema)
+    df = sqlContext.read.format("com.databricks.spark.csv").csv(s3_path, header=True, schema=schema)
     df.printSchema()
 
 
@@ -93,7 +96,6 @@ def spark_commodities_etl():
 
     #### Remove records with nan in Numer Columns
 
-
     print("Remove records with nan in Number Columns")
     at_least_one_factual_values = df.filter( df['trade_usd'].isNotNull() | df['weight_kg'].isNotNull() | df['quantity'].isNotNull())
 
@@ -101,7 +103,7 @@ def spark_commodities_etl():
     ### WRITE DataFrame to PostgreSQL Database
 
     db_prop = config['POSTGRESQL']
-    db_url = db_prop['url']
+    db_url = os.path.expanduser(db_prop['url'])
     db_properties = {
         "driver": db_prop['driver'],
         "user": db_prop['username'],
@@ -109,15 +111,16 @@ def spark_commodities_etl():
     }
 
     # mode: can be 'overwrite' or 'append'
-    at_least_one_factual_values.write.jdbc(url=db_url, mode='overwrite', table="commodities_staging", properties=db_properties)
+    #at_least_one_factual_values.write.jdbc(url=db_url, mode='overwrite', table="commodities_staging", properties=db_properties)
 
-dag = DAG(
-    "test_spark",
-    schedule_interval='@weekly',
-    start_date=datetime.datetime.now() - datetime.timedelta(days=1)
-)
+    at_least_one_factual_values.write \
+        .format("jdbc") \
+        .mode("overwrite") \
+        .option("url", "jdbc:postgresql://db:5432/world") \
+        .option("dbtable", "commodities_staging") \
+        .option("user", "genughaben") \
+        .option("password", "docker") \
+        .save()
 
-pyspark_task = PythonOperator(
-    task_id="spark_commodities_etl_task",
-    python_callable=spark_commodities_etl,
-    dag=dag)
+
+spark_commodities_etl()

@@ -2,5 +2,7 @@ CREATE USER genughaben PASSWORD 'docker';
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO genughaben;
 ALTER USER genughaben CREATEDB;
 CREATE DATABASE dummy;
+CREATE DATABASE world
 \c dummy
 CREATE TABLE test (id SERIAL PRIMARY KEY, value VARCHAR);
+\c world

@@ -53,7 +53,7 @@ Now you can reach airflow in your browser entering: localhost:8080/admin.
 
 ## Configure target PostgreSQL setup
 
-* Update init.sql as you please
+* Update init.sql in local/script folder as you please
 * Update requirements.txt as you please
 
 ## Enter PostgreSQL in docker container:

@@ -6,7 +6,7 @@ from pyspark.sql.types import DoubleType, IntegerType, StringType
 
 
 config = configparser.ConfigParser()
-config.read('config.cfg')
+config.read('../config.cfg')
 
 spark_prop = config['SPARK']
 jdbc_driver_jar_path = spark_prop['jdbc_driver_jar_path']

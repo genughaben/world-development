@@ -67,7 +67,7 @@ def main():
         pass
 
     config = configparser.ConfigParser()
-    config.read('config.cfg')
+    config.read('../config.cfg')
     input_data = config['PATH']['COMMODITIES_DATA']
 
     db_prop = config['POSTGRESQL']

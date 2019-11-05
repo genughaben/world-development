@@ -15,7 +15,7 @@ default_args = {
 }
 
 dag = DAG(
-    "postgres_dag",
+    "postgres_with_s3_source_dag",
     schedule_interval='@weekly',
     start_date=datetime.datetime.now() - datetime.timedelta(days=1)
 )
