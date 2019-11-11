@@ -3,7 +3,7 @@ import configparser
 import os
 
 config = configparser.ConfigParser()
-config.read('config.cfg')
+config.read('../../config.cfg')
 aws = config['AWS']
 
 KEY = aws['KEY']
@@ -18,4 +18,5 @@ s3 = boto3.client(
 
 bucket = "world-development"
 
-s3.upload_file("data/test/commodity_trade_statistics_data.csv", bucket, f"input_data/test/commodity_trade_statistics_data.csv")
+#s3.upload_file("data/test/commodity_trade_statistics_data.csv", bucket, f"input_data/test/commodity_trade_statistics_data.csv")
+s3.upload_file("../GlobalLandTemperaturesByCountry.csv", bucket, f"input_data/GlobalLandTemperaturesByCountry.csv")
