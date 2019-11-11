@@ -1,10 +1,8 @@
 import datetime
-import os
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.bash_operator import BashOperator
-from airflow.contrib.operators.ssh_operator import SSHOperator
 
 from transform.stage_temperature import stage_global_temperatures
 from transform.translate_country_labels import translate_country_labels
@@ -38,33 +36,37 @@ re_create_db_schema = CreateDatabaseSchema(
     dag=dag
 )
 
-# stage_commodities_task = BashOperator(
-#     task_id='stage_commodities_data',
-#     bash_command='/usr/local/airflow/spark/{{params.script_path}} /usr/local/airflow/dags/spark/ /root/',
-#     params={'script_path': 'stage_commodities.sh'},
-#     dag=dag
-# )
+stage_commodities_task = BashOperator(
+    task_id='stage_commodities_data',
+    bash_command='/usr/local/airflow/spark/{{params.script_path}} /usr/local/airflow/dags/spark/ /root/',
+    params={'script_path': 'stage_commodities.sh'},
+    dag=dag
+)
 
-#
-# stage_global_temperatures_task = PythonOperator(
-#     task_id="stage_global_temperatures",
-#     python_callable=stage_global_temperatures,
-#     dag=dag
-# )
+stage_global_temperatures_task = PythonOperator(
+    task_id="stage_global_temperatures",
+    python_callable=stage_global_temperatures,
+    dag=dag
+)
 
+translate_country_labels_task = PythonOperator(
+    task_id="translate_country_labels",
+    python_callable=translate_country_labels,
+    dag=dag
+)
 
-# translate_country_labels_task = PythonOperator(
-#     task_id="translate_country_labels",
-#     python_callable=translate_country_labels,
-#     dag=dag
-# )
-
-
-generate_common_countries_table_task = PythonOperator(
-    task_id='generate_common_countries_table_task',
+create_common_countries_table_task = PythonOperator(
+    task_id='create_common_countries_table',
     python_callable=create_common_countries_table,
     dag=dag
 )
+
+start_operator >> re_create_db_schema
+re_create_db_schema >> stage_commodities_task
+re_create_db_schema >> stage_global_temperatures_task
+stage_commodities_task >> translate_country_labels_task
+stage_global_temperatures_task >> translate_country_labels_task
+translate_country_labels_task >> create_common_countries_table_task
 
 # stage_global_temperatures_task = BashOperator(
 #     task_id='stage_global_temperatures',
@@ -86,7 +88,7 @@ generate_common_countries_table_task = PythonOperator(
 # )
 
 
-start_operator >> generate_common_countries_table_task #translate_country_labels_task
+#start_operator >> generate_common_countries_table_task #translate_country_labels_task
 #translate_country_labels_task >> generate_common_countries_table_task
 
 # start_operator >> stage_global_temperatures_task

@@ -1,7 +1,7 @@
 import warnings
 warnings.filterwarnings('ignore')
 from airflow.hooks.postgres_hook import PostgresHook
-from sql_queries import update_temperature_country_labels_query, copy_temperature_country_labels_query, update_commodites_country_labels_query
+from .sql_queries import update_temperature_country_labels_query, copy_temperature_country_labels_query, update_commodites_country_labels_query
 
 
 def translate_country_labels():

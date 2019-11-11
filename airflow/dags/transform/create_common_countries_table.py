@@ -1,7 +1,10 @@
+import pandas as pd
+from functools import reduce
+import operator
 import warnings
 warnings.filterwarnings('ignore')
 from airflow.hooks.postgres_hook import PostgresHook
-from sql_queries import drop_dimension_countries_table, create_dimension_countries_table
+#from sql_queries import drop_dimension_countries_table, create_dimension_countries_table
 
 def create_common_countries_table():
     postgres_hook = PostgresHook(postgres_conn_id='postgres', schema='world')
@@ -45,11 +48,6 @@ def create_common_countries_table():
     print(f"common_country_set: {common_country_set}")
 
     table="country_or_area"
-
-
-
-    postgres_hook.run(drop_dimension_countries_table)
-    postgres_hook.run(create_dimension_countries_table)
 
     country_or_area_df = pd.DataFrame(list(common_country_set), columns=['country_or_area'])
     country_or_area_df.to_sql(table, engine, index=False, if_exists="append")
