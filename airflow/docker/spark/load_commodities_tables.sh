@@ -5,4 +5,4 @@ spark-submit \
   --jars=/usr/local/airflow/spark/dependencies/postgresql-42.2.8.jar \
   --packages=org.apache.hadoop:hadoop-aws:2.7.0 \
   --executor-memory 4g \
-  /usr/local/airflow/spark/scripts/stage_commodities.py
+  /usr/local/airflow/spark/scripts/load_commodities_tables.py

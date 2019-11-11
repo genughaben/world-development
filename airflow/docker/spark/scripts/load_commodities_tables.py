@@ -12,7 +12,7 @@ args = parser.parse_args()
 if args.s3_path:
     s3_path = args.s3_path
 else:
-    s3_path = "s3a://world-development/input_data/commodity_trade_statistics_data.csv"
+    s3_path = "s3a://world-development/input_data/test/commodity_trade_statistics_data.csv"
 
 CONFIG_PATH=os.path.expanduser('~/config.cfg')
 print(f"path: {CONFIG_PATH}")
