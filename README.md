@@ -1,5 +1,28 @@
 # World Development - Database
 
+## Goal
+
+The goal of this project is to import data from:
+* Global Commodities and Trade Statistics of the United Nations (577.462 rows) [source](https://www.kaggle.com/unitednations/global-commodity-trade-statistics) and
+* Climate Change: Earth Surface Temperature Data from NOAA (8.225.871 rows) [source](https://www.kaggle.com/berkeleyearth/climate-change-earth-surface-temperature-data)
+
+into a joint data schema:
+
+![World Database Schema](img/World_DB.png "World Database Schema")
+
+## Process description:
+
+An airflow DAG orchestrates the whole process. It consists of the following steps:
+
+1. Staging of Global Temperatures
+   *  
+2. Staging of Global Commodities and Trade Statistics
+3. Create a joint countries and regions table from both sources staging tables
+4. Create temperature_facts table from staged global temperatures table and countries table
+5. Create dimensional tables from staged global trade statistics (flow, commodities, categories, quantities)
+6. Create trade_facts table from staged global trade statistics and dimensional tables (flow, commodities, quantities
+
+
 ## Requirements:
 * This tutorial assumes a Ubuntu installation (specifically: 18.04)
 * Assumes pipenv
