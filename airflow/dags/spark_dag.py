@@ -5,7 +5,7 @@ from airflow.operators.bash_operator import BashOperator
 from airflow.contrib.operators.ssh_operator import SSHOperator
 
 from airflow.contrib.operators.spark_submit_operator import SparkSubmitOperator
-from airflow.operators import (CreateDatabaseSchema, StageToRedshiftOperator)
+from airflow.operators import CreateDatabaseSchema
 
 
 default_args = {
