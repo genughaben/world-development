@@ -124,32 +124,3 @@ load_flows_table >> load_trades_table
 load_quantities_table >> load_trades_table
 load_categories_table >> load_trades_table
 load_commodities_table >> load_trades_table
-
-
-# stage_global_temperatures_task = BashOperator(
-#     task_id='stage_global_temperatures',
-#     bash_command='/usr/local/airflow/spark/{{params.script_path}} /usr/local/airflow/dags/spark/ /root/',
-#     params={'script_path': 'stage_commodities.sh'},
-#     dag=dag
-# )
-
-# load_global_temperature_task = BashOperator(
-#     task_id='load_global_temperatures',
-#
-# )
-
-# load_commodities_tables_task = BashOperator(
-#     task_id='load_commodities_tables',
-#     bash_command='/usr/local/airflow/spark/{{params.script_path}} /usr/local/airflow/dags/spark/ /root/',
-#     params={'script_path': 'load_commodities_tables.sh'},
-#     dag=dag
-# )
-
-
-#start_operator >> generate_common_countries_table_task #translate_country_labels_task
-#translate_country_labels_task >> generate_common_countries_table_task
-
-# start_operator >> stage_global_temperatures_task
-
-# start_operator >> stage_commodities_task
-# stage_commodities_task >> load_commodities_tables_task
