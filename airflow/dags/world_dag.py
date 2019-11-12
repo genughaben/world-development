@@ -4,9 +4,9 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.bash_operator import BashOperator
 
-from transform.stage_temperature import stage_global_temperatures
-from transform.translate_country_labels import translate_country_labels
-from transform.create_common_countries_table import create_common_countries_table
+from tasks.stage_temperature import stage_global_temperatures
+from tasks.translate_country_labels import translate_country_labels
+from tasks.create_common_countries_table import create_common_countries_table
 
 from airflow.operators import (CreateDatabaseSchema, LoadTableOperator)
 
