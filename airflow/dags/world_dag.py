@@ -8,7 +8,7 @@ from tasks.stage_temperature import stage_global_temperatures
 from tasks.translate_country_labels import translate_country_labels
 from tasks.create_common_countries_table import create_common_countries_table
 
-from airflow.operators import (CreateDatabaseSchema, LoadTableOperator)
+from airflow.operators import (CreateDatabaseSchema, LoadTableOperator, DataQualityOperator)
 
 
 default_args = {
@@ -103,6 +103,13 @@ load_trades_table = LoadTableOperator(
     dag=dag
 )
 
+check_data_quality_task = DataQualityOperator(
+    task_id="Check_data_quality",
+    postgres_conn_id="postgres",
+    tables=['flows','quantities', 'categories', 'country_or_area', 'commodities', 'temperatures', 'trades'],
+    dag=dag
+)
+
 start_operator >> re_create_db_schema
 re_create_db_schema >> stage_commodities_task
 re_create_db_schema >> stage_global_temperatures_task
@@ -116,7 +123,7 @@ create_common_countries_table_task >> load_temperatures_table
 stage_commodities_task >> load_flows_table
 stage_commodities_task >> load_quantities_table
 stage_commodities_task >> load_categories_table
-stage_commodities_task >> load_commodities_table
+load_categories_table >> load_commodities_table
 
 load_temperatures_table >> load_trades_table
 translate_country_labels_task >> load_trades_table
@@ -124,3 +131,5 @@ load_flows_table >> load_trades_table
 load_quantities_table >> load_trades_table
 load_categories_table >> load_trades_table
 load_commodities_table >> load_trades_table
+
+load_trades_table       >> check_data_quality_task

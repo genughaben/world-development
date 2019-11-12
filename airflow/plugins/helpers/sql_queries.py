@@ -208,7 +208,7 @@ fact_trades_table_insert = ("""
                                select *,
                                       row_number() over (partition by year, country_or_area_id) as row_number
                                from temperatures
-                               ) as rowstemperature_id, year, country_or_area_id
+                               ) as rows
                             where row_number = 1
         ) tt ON (tmp.year = tt.year AND tmp.country_or_area_id = tt.country_or_area_id);
 """)
@@ -301,11 +301,11 @@ insert_table_queries = {
 }
 
 
-quality_check = {
+expected_table_counts = {
     'flows'             : 4,
     'quantities'        : 12,
     'categories'        : 98,
-    'country_or_ares'   : 249,
+    'country_or_area'   : 249,
     'commodities'       : 5039,
     'temperatures'      : 46606,
     'trades'            : 8225145
