@@ -10,20 +10,20 @@ class CreateDatabaseSchema(BaseOperator):
 
     @apply_defaults
     def __init__(self,
-                 redshift_conn_id="",
+                 postgres_conn_id="",
                  to_exec=False,
                  *args, **kwargs):
 
         super(CreateDatabaseSchema, self).__init__(*args, **kwargs)
-        self.redshift_conn_id=redshift_conn_id
+        self.postgres_conn_id=postgres_conn_id
         self.to_exec = to_exec
 
 
     def execute(self, context):
         if self.to_exec:
             self.log.info(f"Drop and recreate DB schema..")
-            redshift = PostgresHook(postgres_conn_id=self.redshift_conn_id)
-            re_create_database_schema(redshift)
+            postgres_hook = PostgresHook(postgres_conn_id=self.postgres_conn_id)
+            re_create_database_schema(postgres_hook)
 
             self.log.info(f"Insert data finished.")
         else:
