@@ -100,6 +100,10 @@ def spark_commodities_etl():
     at_least_one_factual_values = df.filter( df['trade_usd'].isNotNull() | df['weight_kg'].isNotNull() | df['quantity'].isNotNull())
 
 
+    ### REMOVE DUPLICATES
+
+    at_least_one_factual_values_no_dup = at_least_one_factual_values.dropDuplicates()
+
     ### WRITE DataFrame to PostgreSQL Database
 
     db_prop = config['POSTGRESQL']
@@ -113,7 +117,7 @@ def spark_commodities_etl():
     # mode: can be 'overwrite' or 'append'
     #at_least_one_factual_values.write.jdbc(url=db_url, mode='overwrite', table="commodities_staging", properties=db_properties)
 
-    at_least_one_factual_values.write \
+    at_least_one_factual_values_no_dup.write \
         .format("jdbc") \
         .mode("overwrite") \
         .option("url", "jdbc:postgresql://db:5432/world") \
