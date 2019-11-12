@@ -1,7 +1,7 @@
 from operators.create_data_schema import CreateDatabaseSchema
-from operators.stage_redshift import StageToRedshiftOperator
+from operators.load_table import LoadTableOperator
 
 __all__ = [
     'CreateDatabaseSchema',
-    'StageToRedshiftOperator'
+    'LoadTableOperator'
 ]

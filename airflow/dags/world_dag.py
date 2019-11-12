@@ -8,7 +8,7 @@ from transform.stage_temperature import stage_global_temperatures
 from transform.translate_country_labels import translate_country_labels
 from transform.create_common_countries_table import create_common_countries_table
 
-from airflow.operators import (CreateDatabaseSchema, StageToRedshiftOperator)
+from airflow.operators import (CreateDatabaseSchema, LoadTableOperator)
 
 
 default_args = {
@@ -30,21 +30,21 @@ dag = DAG(
 start_operator = DummyOperator(task_id='Begin_execution',  dag=dag)
 
 re_create_db_schema = CreateDatabaseSchema(
-    task_id="Drop_and_create_db_schema",
-    redshift_conn_id="postgres",
+    task_id="Recreate_db_schema",
+    postgres_conn_id="postgres",
     to_exec=True,
     dag=dag
 )
 
 stage_commodities_task = BashOperator(
-    task_id='stage_commodities_data',
+    task_id='stage_commodities',
     bash_command='/usr/local/airflow/spark/{{params.script_path}} /usr/local/airflow/dags/spark/ /root/',
     params={'script_path': 'stage_commodities.sh'},
     dag=dag
 )
 
 stage_global_temperatures_task = PythonOperator(
-    task_id="stage_global_temperatures",
+    task_id="stage_temperatures",
     python_callable=stage_global_temperatures,
     dag=dag
 )
@@ -61,12 +61,70 @@ create_common_countries_table_task = PythonOperator(
     dag=dag
 )
 
+load_flows_table = LoadTableOperator(
+    task_id="Load_dim_flows_table",
+    postgres_conn_id="postgres",
+    table="flows",
+    dag=dag
+)
+
+load_quantities_table = LoadTableOperator(
+    task_id="Load_dim_quantities_table",
+    postgres_conn_id="postgres",
+    table="quantities",
+    dag=dag
+)
+
+load_categories_table = LoadTableOperator(
+    task_id="Load_dim_categories_table",
+    postgres_conn_id="postgres",
+    table="categories",
+    dag=dag
+)
+
+load_commodities_table = LoadTableOperator(
+    task_id="Load_dim_commodities_table",
+    postgres_conn_id="postgres",
+    table="commodities",
+    dag=dag
+)
+
+load_temperatures_table = LoadTableOperator(
+    task_id="Load_dim_temperatures_table",
+    postgres_conn_id="postgres",
+    table="temperatures",
+    dag=dag
+)
+
+load_trades_table = LoadTableOperator(
+    task_id="Load_dim_trades_table",
+    postgres_conn_id="postgres",
+    table="trades",
+    dag=dag
+)
+
 start_operator >> re_create_db_schema
 re_create_db_schema >> stage_commodities_task
 re_create_db_schema >> stage_global_temperatures_task
+
 stage_commodities_task >> translate_country_labels_task
 stage_global_temperatures_task >> translate_country_labels_task
+
 translate_country_labels_task >> create_common_countries_table_task
+create_common_countries_table_task >> load_temperatures_table
+
+stage_commodities_task >> load_flows_table
+stage_commodities_task >> load_quantities_table
+stage_commodities_task >> load_categories_table
+stage_commodities_task >> load_commodities_table
+
+load_temperatures_table >> load_trades_table
+translate_country_labels_task >> load_trades_table
+load_flows_table >> load_trades_table
+load_quantities_table >> load_trades_table
+load_categories_table >> load_trades_table
+load_commodities_table >> load_trades_table
+
 
 # stage_global_temperatures_task = BashOperator(
 #     task_id='stage_global_temperatures',
