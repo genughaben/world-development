@@ -10,5 +10,7 @@ class UdacityPlugin(AirflowPlugin):
     operators = [
         operators.CreateDatabaseSchema,
         operators.LoadTableOperator,
-        operators.DataQualityOperator
+        operators.DataQualityOperator,
+        operators.UpdateTableRowsOperator,
+        operators.CopyTableRowsOperator
     ]

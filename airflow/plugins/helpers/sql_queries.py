@@ -213,74 +213,28 @@ fact_trades_table_insert = ("""
         ) tt ON (tmp.year = tt.year AND tmp.country_or_area_id = tt.country_or_area_id);
 """)
 
+# Update Queries:
 
-test_check_for_duplicates = """
-select count(*)
-from (
-SELECT 
-    country_or_area,
-    year,      
-    comm_code,    
-    commodity,  
-    flow,  
-    trade_usd,   
-    weight_kg,   
-    quantity_name,   
-    quantity,
-    COUNT(*)
-FROM commodities_staging
-GROUP BY  
-    country_or_area,
-    year,      
-    comm_code,    
-    commodity,  
-    flow,  
-    trade_usd,   
-    weight_kg,   
-    quantity_name,   
-    quantity
-HAVING COUNT(*) = 1
-) as foo;
-"""
+def create_row_update_query(table, column, set_value, where_value):
+    update_rows_query = (
+        f"UPDATE {table}"
+        f"SET {column} = '{set_value}'"
+        f"WHERE {column} = '{where_value}'"
+    )
 
-test_trades_selection = """
-        SELECT count(*)
-        FROM (
-            SELECT 
-                cs.year,
-                ca.country_or_area_id,  
-                c.commodity_id,  
-                f.flow_id,  
-                cs.trade_usd,   
-                cs.weight_kg,   
-                q.quantity_id,
-                cs.quantity
-            FROM commodities_staging as cs                                         JOIN
-                flows as f         ON cs.flow              = f.flow_type           JOIN
-                quantities q       ON cs.quantity_name     = q.quantity_name       JOIN
-                commodities c        ON (cs.commodity      = c.commodity_name      AND
-                                         cs.comm_code      = c.commodity_code )    JOIN
-                country_or_area ca ON cs.country_or_area   = ca.country_or_area 
-            ) tmp LEFT JOIN ( select temperature_id, year, country_or_area_id
-                                from (
-                                   select *,
-                                          row_number() over (partition by year, country_or_area_id) as row_number
-                                   from temperatures
-                                   ) as rows
-                                where row_number = 1
-            ) tt ON (tmp.year = tt.year AND tmp.country_or_area_id = tt.country_or_area_id);
-            
-            
-        SELECT count(*)    
-        FROM commodities_staging as cs                                         JOIN
-            flows as f         ON cs.flow              = f.flow_type           JOIN
-            quantities q       ON cs.quantity_name     = q.quantity_name       JOIN
-            country_or_area ca ON cs.country_or_area   = ca.country_or_area LEFT OUTER JOIN
-            temperatures t          ON tmp.year = t.year AND tmp.country_or_area_id = t.country_or_area_id;
-            commodities c      ON cs.commodity         = c.commodity_name      LEFT OUTER JOIN
-            
-        ) tmp LEFT OUTER JOIN        
-"""
+    return  update_rows_query
+
+# Copy queries:
+
+copy_temperature_country_labels_query = ("""
+    INSERT INTO temperature_staging (year, country_or_area, temperature, uncertainty)
+        SELECT year, '%s', temperature, uncertainty FROM temperature_staging WHERE country_or_area = '%s';
+""")
+
+copy_rows_queries = {
+    "temperature_country_or_area": copy_temperature_country_labels_query
+}
+
 
 create_table_queries    = [ staging_commodities_table_create, staging_temperature_table_create, \
                             dim_countries_table_create, dim_flows_table_create, dim_quantities_table_create, \

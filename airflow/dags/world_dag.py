@@ -5,10 +5,12 @@ from airflow.operators.python_operator import PythonOperator
 from airflow.operators.bash_operator import BashOperator
 
 from tasks.stage_temperature import stage_global_temperatures
-from tasks.translate_country_labels import translate_country_labels
+from tasks.update_and_copy_country_labels import update_and_copy_country_labels, update_temperature_countries, \
+                                                 copy_temperature_countries, update_commodity_countries
 from tasks.create_common_countries_table import create_common_countries_table
 
-from airflow.operators import (CreateDatabaseSchema, LoadTableOperator, DataQualityOperator)
+from airflow.operators import (CreateDatabaseSchema, LoadTableOperator, DataQualityOperator, \
+                               UpdateTableRowsOperator, CopyTableRowsOperator)
 
 
 default_args = {
@@ -49,11 +51,39 @@ stage_global_temperatures_task = PythonOperator(
     dag=dag
 )
 
-translate_country_labels_task = PythonOperator(
-    task_id="translate_country_labels",
-    python_callable=translate_country_labels,
+update_temperature_countries_task = UpdateTableRowsOperator(
+    task_id="update_temperature_countries",
+    postgres_conn_id="postgres",
+    table="temperature_staging",
+    column="country_or_area",
+    update_dict=update_temperature_countries,
     dag=dag
 )
+
+copy_temperature_countries_task = CopyTableRowsOperator(
+    task_id="copy_temperature_countries",
+    postgres_conn_id="postgres",
+    table="temperature_staging",
+    column="country_or_area",
+    copy_dict=copy_temperature_countries,
+    dag=dag
+)
+
+update_commodity_countries_task = UpdateTableRowsOperator(
+    task_id="update_commodity_countries",
+    postgres_conn_id="postgres",
+    table="commodities_staging",
+    column="country_or_area",
+    update_dict=update_commodity_countries,
+    dag=dag
+)
+
+
+# translate_country_labels_task = PythonOperator(
+#     task_id="update_and_copy_country_labels",
+#     python_callable=update_and_copy_country_labels,
+#     dag=dag
+# )
 
 create_common_countries_table_task = PythonOperator(
     task_id='create_common_countries_table',
@@ -110,14 +140,19 @@ check_data_quality_task = DataQualityOperator(
     dag=dag
 )
 
+end_operator = DummyOperator(task_id='End_execution',  dag=dag)
+
 start_operator >> re_create_db_schema
 re_create_db_schema >> stage_commodities_task
 re_create_db_schema >> stage_global_temperatures_task
 
-stage_commodities_task >> translate_country_labels_task
-stage_global_temperatures_task >> translate_country_labels_task
+stage_commodities_task >> update_temperature_countries_task
+stage_global_temperatures_task >> update_temperature_countries_task
 
-translate_country_labels_task >> create_common_countries_table_task
+update_temperature_countries_task >> copy_temperature_countries_task
+copy_temperature_countries_task >> update_commodity_countries_task
+
+update_commodity_countries_task >> create_common_countries_table_task
 create_common_countries_table_task >> load_temperatures_table
 
 stage_commodities_task >> load_flows_table
@@ -126,10 +161,11 @@ stage_commodities_task >> load_categories_table
 load_categories_table >> load_commodities_table
 
 load_temperatures_table >> load_trades_table
-translate_country_labels_task >> load_trades_table
+update_commodity_countries_task >> load_trades_table
 load_flows_table >> load_trades_table
 load_quantities_table >> load_trades_table
 load_categories_table >> load_trades_table
 load_commodities_table >> load_trades_table
 
 load_trades_table       >> check_data_quality_task
+check_data_quality_task >> end_operator
