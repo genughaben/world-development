@@ -5,8 +5,8 @@ from airflow.operators.python_operator import PythonOperator
 from airflow.operators.bash_operator import BashOperator
 
 from tasks.stage_temperature import stage_global_temperatures
-from tasks.update_and_copy_country_labels import update_and_copy_country_labels, update_temperature_countries, \
-                                                 copy_temperature_countries, update_commodity_countries
+from tasks.update_and_copy_countries import update_temperature_countries, copy_temperature_countries, \
+                                            update_commodity_countries
 from tasks.create_common_countries_table import create_common_countries_table
 
 from airflow.operators import (CreateDatabaseSchema, LoadTableOperator, DataQualityOperator, \

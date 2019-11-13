@@ -217,8 +217,8 @@ fact_trades_table_insert = ("""
 
 def create_row_update_query(table, column, set_value, where_value):
     update_rows_query = (
-        f"UPDATE {table}"
-        f"SET {column} = '{set_value}'"
+        f"UPDATE {table} "
+        f"SET {column} = '{set_value}' "
         f"WHERE {column} = '{where_value}'"
     )
 
@@ -232,7 +232,7 @@ copy_temperature_country_labels_query = ("""
 """)
 
 copy_rows_queries = {
-    "temperature_country_or_area": copy_temperature_country_labels_query
+    "temperature_staging_country_or_area": copy_temperature_country_labels_query
 }
 
 

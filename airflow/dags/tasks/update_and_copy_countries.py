@@ -1,8 +1,3 @@
-import warnings
-warnings.filterwarnings('ignore')
-from airflow.hooks.postgres_hook import PostgresHook
-from .sql_queries import update_temperature_country_labels_query, copy_temperature_country_labels_query, update_commodites_country_labels_query
-
 update_temperature_countries = {
     # update temperature country labels
     # previous                          : new
@@ -79,30 +74,3 @@ update_commodity_countries = {
     'Viet Nam'                          : 'Vietnam',
     'Wallis and Futuna Isds'            : 'Wallis and Futuna Islands'
 }
-
-def update_and_copy_country_labels():
-    postgres = PostgresHook(postgres_conn_id='postgres', schema='world')
-
-    for prev_country_label, new_country_label in update_temperature_countries.items():
-        query = update_temperature_country_labels_query % (new_country_label, prev_country_label)
-        try:
-            postgres.run(query)
-        except:
-            print("cound not execute:")
-            print(query)
-
-    for copy_mew, existing in copy_temperature_countries.items():
-        query = copy_temperature_country_labels_query % (copy_mew, existing)
-        try:
-            postgres.run(query)
-        except:
-            print("cound not execute:")
-            print(query)
-
-    for prev_country_label, new_country_label in update_commodity_countries.items():
-        query = update_commodites_country_labels_query % (new_country_label, prev_country_label)
-        try:
-            postgres.run(query)
-        except:
-            print("cound not execute:")
-            print(query)
