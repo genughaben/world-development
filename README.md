@@ -146,16 +146,28 @@ weight_kg          | INT     |      |
 temperature_id     | INT     |      | temperatures
 
 
+# Tech Stack
+
+You can find an outline of the current tech stack in the [docker-compose.yml](airflow/docker/docker-compose.yml)
+
+The current setup consists of:
+* **Apache Airflow** as pipeline orchestrator, run with a SequentialExecutor (one container (*postgres*) for the webservice and one container (*webserver*) for the configuration database)
+* **Apache Spark** as cluster computing framework, run as a stand-alone cluster (one container (*spark-master*) for one master node, one container (*spark-worker-1*) as worker node)
+* **PostgreSQL** as target database where the final data schema and the data result
+* **AWS S3** as storage for the input data
+
+I choose this stack, as I wanted to create a locally executable version of the whole project, that with some adaptations (i.e. move to kubernetes) could be run in the cloud as well, i.e. AWS EKS. 
+
 # Scenarios
 
 How would the current approach be changed if one of the following conditions materialized:
 
 ### 1. If the data was increased by 100x.
 
-To remove bottlenecks at the staging step, the temperature_staging which is currently performed by a PhythonOperator could be reformulated to a Spark Job.
+To remove bottlenecks at the staging step, the temperature_staging which is currently performed by a PythonOperator could be reformulated to a Spark Job.
 As such it could be run like the commodities_staging.py already is.
-In this project the Spark integration is using a stand-alone cluster with one master and one slave node. 
-This could be extended by adding more nodes. 
+In this project the Spark integration is using a stand-alone cluster with one master and one worker node. 
+This could be extended by adding more worker nodes. For best performance also the [stage_commodities.py](airflow/docker/spark/scripts/stage_commodities.py) can be optimized.
 And obviously if this was not enough to be run on a single machine based on the docker-compose.yml a kubernetes implementation could be built and run on AWS or GCP.  
 Postgres could manage 100x (100 GB in this case). 
 But in order to be highly available a multi-machine setup couldb be used. 
@@ -205,8 +217,10 @@ Copy and customize config values:
 ```
 
 Now, customize values in the newly created config.cfg as required.
+Primarily you need to add your AWS credentials to access S3.
   
 NB: config.cfg is automatically excluded from git repo. If you should use another name, add it got .gitignore and update config variable usage across project.
+  
   
 # Local ETL
 
