@@ -146,6 +146,42 @@ weight_kg          | INT     |      |
 temperature_id     | INT     |      | temperatures
 
 
+# Scenarios
+
+How would the current approach be changed if one of the following conditions materialized:
+
+### 1. If the data was increased by 100x.
+
+To remove bottlenecks at the staging step, the temperature_staging which is currently performed by a PhythonOperator could be reformulated to a Spark Job.
+As such it could be run like the commodities_staging.py already is.
+In this project the Spark integration is using a stand-alone cluster with one master and one slave node. 
+This could be extended by adding more nodes. 
+And obviously if this was not enough to be run on a single machine based on the docker-compose.yml a kubernetes implementation could be built and run on AWS or GCP.  
+Postgres could manage 100x (100 GB in this case). 
+But in order to be highly available a multi-machine setup couldb be used. 
+Also AWS Redshift could be used as Cloud alternative to easily be able to also work with 1000x data. 
+This wouldn't be to hard to achieve: 
+* An AWS Redshift cluster of appropriate size needed to be setup
+* a new AWS connection needed to be defined in Airflow and 
+* minor changes needed to be made to the operators and the SQL code to make it work with AWS Redshift capabilities. This could be:
+  * change autoincrement from SERIAL to IDENTITY(1, 1)
+  * adding dist_keys, sort_keys and 
+  * distribution strategies 
+
+### 2. If the pipelines were run on a daily basis by 7am.
+
+As stated for scenario 1, we would need more parallelization for the Spark Jobs to achieve results readily.
+Again for more processing power, more nodes and more machines could be used locally or in the cloud using Kubernetes instead of docker alone. 
+Furthermore, in the staging phase, I would not move the data directly into the database, but into multiple files, e.g. in S3 or HDFS.
+From there they could be loaded in a parallel fashion into the database and further processed in parallel on AWS Redshift.
+
+### 3. If the database needed to be accessed by 100+ people.
+
+Again, parallelization is key to meet this requirement. Using multiple machines and for smooth scaling the usage of a cloud provider would make best sense.
+
+
+# How to
+
 ## Requirements:
 * This tutorial assumes a Ubuntu installation (specifically: 18.04)
 * Assumes pipenv
