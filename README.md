@@ -1,26 +1,149 @@
-# World Development - Database
+# Data Engineering Nanodegree - Capstone Project
+## World Development - Database
 
-## Goal
+## Intro
 
-The goal of this project is to import data from:
+In the final project of the Data Engineering Nanodegree Udacity gave us the opportunity to select data sources for ourselves to build a data pipeline projecct.
+I chose to work with trade and climage change data.
+
+## Datasets and project goal
+
+The goal of this project is to import data from the datasets:
 * Global Commodities and Trade Statistics of the United Nations (577.462 rows) [source](https://www.kaggle.com/unitednations/global-commodity-trade-statistics) and
 * Climate Change: Earth Surface Temperature Data from NOAA (8.225.871 rows) [source](https://www.kaggle.com/berkeleyearth/climate-change-earth-surface-temperature-data)
 
-into a joint data schema:
+into a joint data schema.
 
-![World Database Schema](img/World_DB.png "World Database Schema")
+### Source files and location
 
-## Process description:
+The source data consists of two CSV files:
+* commodity_trade_statistics_data.csv (1.1 GB) and
+* GlobalTemperatures.csv (21.6 MB)
+
+that have been uploaded to AWS S3 for access. 
+
+## Project Scope
+
+The raw data is downloaded from kaggle and uploaded to S3.
+A airflow-powered data pipeline is used to ETL the data into a constellation schema.
+Therefore data is staged - using Spark for the trades data and pandas for the temperature data.
+Subsequently a common dimension table for country_and_area has been devised - partly by hand.
+Next more dimensional tables and ultimately fact tables have been created automatically.
+
+Finally a data quality check is used to check that data has been ETLed as expected.
+
+The complete processes airflow DAG looks like this:
+
+![World Database Schema](img/World_DAG.png "World Database ETL Process")
+
+### Process description:
 
 An airflow DAG orchestrates the whole process. It consists of the following steps:
 
-1. Staging of Global Temperatures
-   *  
-2. Staging of Global Commodities and Trade Statistics
-3. Create a joint countries and regions table from both sources staging tables
-4. Create temperature_facts table from staged global temperatures table and countries table
+1. Begin execution ... (does nothing but indicating the start of the process)
+2. (Re-)creates the target database constellation schema (executes DROP and CREATE SQL Statements) and the staging tables
+3. Staging (staging tables are not part of the final DB schema displayed below)
+    1. stage_commodities: Staging of Global Temperatures (executes a PythonOperator using pandas) into commodities_staging table
+    2. stage_temperatures: Staging of Global Commodities and Trade Statistics (executes a BashOperator that executes a Spark Job on a standalone cluster in docker in client mode) into temperature_staging table
+4. Create a joint countries and regions table from both sources staging tables:
+    1. translate_country_labels: rename country_and_area labels in commodities_staging and temperature_staging to a common set (ignoring 3 areas given in the trades statistics, and copying entires of temperature_staging for country_or_area labels close by for which not data was available in temperature_staging but in commodities_staging) and to common rules (i.e. translate Isds. to Islands) 
+    2. create_common_countries_table: unify country_and_area labels of both staging tables into one set and upload into the country_and_area table 
 5. Create dimensional tables from staged global trade statistics (flow, commodities, categories, quantities)
-6. Create trade_facts table from staged global trade statistics and dimensional tables (flow, commodities, quantities
+6. Create facts table 'temperature' from staged global temperatures table and country_or_area table
+7. Create facts table 'trades' from staged global trade statistics and dimensional tables (country_or_area, flow, commodities, categories, quantities) and facts table temperatures
+
+## Tooling
+
+THe following technologies where used in this projeccts that also have been part of the Nanodegrees programm:
+
+* Amazon S3 for file storage
+* PostgreSQL for data storage
+* Apache Spark for data processing
+* Apache Airflow for data orchestration
+
+## Data schema
+
+The resulting constellation schema (i.e. a snowflake schema with more than one facts table) looks like this:
+
+![World Database Schema](img/World_DB.png "World Database Schema")
+
+### Content
+* flows:  dimension table - indicates type of trade (import, export, re-import, re-export)
+* commodities: dimension table - type of commodity that has been traded
+* categories: dimension table - category of commodity type that has been traded (read: group of commodites)
+* quantities: dimension table - weight, volume or length, no pieces etc.
+* country_or_area: dimension table - consolidated countries table from stage_commodities and stage_temperature
+* temperatures: facts table - provides average temperatures for year and country_or_area as well as average certainty of the measurement
+* trades: facts table - provides commodities in the qu for year and country 
+
+### Data dictionary
+
+Legend:
+PK = Primary Key
+FK = Foreign Key
+
+table: `flows`
+
+Column    |  Type   |  PK  |  FK to table
+----------|---------|------|------
+flow_id   |   INT   | Yes
+flow_type | VARCHAR
+
+table: `commodities`
+
+Column         |  Type   |  PK  |  FK to table
+---------------|---------|------|------------
+commodity_id   |   INT   | Yes
+commodity_name | VARCHAR |
+commodity_code | VARCHAR |
+category_id    | VARCHAR |      | categories
+
+table: `categories`
+
+Column        | Type    | PK   | FK to table
+--------------| ------- |------|------------
+category_id   |   INT   | Yes
+category_name | VARCHAR |
+
+table: `quantities`
+
+Column        | Type    | PK   | FK to table
+--------------| ------- |------|------------
+quantity_id   |   INT   | Yes
+quantity_name | VARCHAR |
+
+table: `country_or_area`
+
+Column             | Type    | PK   | FK to table
+-------------------| ------- |------|------------
+country_or_area_id |   INT   | Yes
+country_or_area    | VARCHAR |
+
+table: `temperatures`
+
+Column             | Type  | PK   | FK to table
+-------------------| ----- |------|------------
+temperature_id     |  INT  | Yes  |
+country_or_area_id |  INT  |      | country_or_area
+year               |  INT  |      |
+temperature        | FLOAT |      |
+certainty          | FLOAT |      |
+
+table: `trades`
+
+Column             | Type    | PK   | FK to table
+-------------------|---------|------|------------
+trade_id           | INT     | Yes  |
+flow_id            | INT     |      | flows 
+commodity_id       | INT     |      | commodities
+quantity_id        | INT     |      | quantities
+country_or_area_id | INT     |      | country_or_area
+ntity_amount       | FLOAT   |      |
+quantity_amount    | FLOAT   |      |
+trade_usd          | FLOAT   |      |
+year               | INT     |      |
+weight_kg          | INT     |      | 
+temperature_id     | INT     |      | temperatures
 
 
 ## Requirements:
