@@ -19,14 +19,15 @@ def inspect_rows(df):
 
 # pandas function creates a report from several common EDA commands
 def eda(dataframe):
-    print(f'missing values:\n {dataframe.isnull().sum()}\n')
-    print(f'dataframe index:\n {dataframe.index}\n')
-    print(f'dataframe types:\n {dataframe.dtypes}\n')
     print(f'dataframe shape:\n {dataframe.shape}\n')
+    print(f'dataframe types:\n {dataframe.dtypes}\n')
+    print(f'dataframe index:\n {dataframe.index}\n')
+    print(f'missing values:\n {dataframe.isnull().sum()}\n')
     print(f'dataframe describe:ń {dataframe.describe()}\n')
     print(f'unique values:\n')
     for item in dataframe:
         print(f"item: {item} - {dataframe[item].nunique()}")
+
 
 def boxplot(df, col_name):
     import seaborn as sns

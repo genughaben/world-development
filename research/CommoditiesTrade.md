@@ -4,7 +4,7 @@
 10 columns
 8.225.871 rows
 
-Columns data types:
+### Columns data types
 
 | col_name | data type |
 |----------|-----------------|
@@ -18,9 +18,8 @@ Columns data types:
 |quantity_name|object|
 |quantity|float64|
 |category|object|
-dtype: object
 
-Column unique values:
+### Column unique values
 
 | col_name | unique_vals |
 |----------|-----------------|
@@ -35,7 +34,7 @@ Column unique values:
 |quantity|2124833|
 |category|98|
 
-### missing values: 
+### Missing values
 
 | col_name | missing_count |
 |----------|-----------------|
@@ -50,21 +49,20 @@ Column unique values:
 |quantity|304857|
 |category|0|
 
-dtype: int64
+### Numeric values ranges
 
-## Numeric values ranges:
-
-- NUMERIC year:    29 different values from:    1988 to 2,016
-- NUMERIC trade_usd:    3062165 different values from:    1 to 2,443,310,524,064
-- NUMERIC weight_kg:    2137908 different values from:    0.0 to 1,860,133,241,000
-- NUMERIC quantity:    2124834 different values from:    0.0 to 1,026,356,999,296,000
+* year:         29 different values      from:    1988  to 2,016
+* trade_usd:    3062165 different values from:    1     to 2,443,310,524,064
+* weight_kg:    2137908 different values from:    0.0   to 1,860,133,241,000
+* quantity:     2124834 different values from:    0.0   to 1,026,356,999,296,000
 
 ## STRING VALUES and UNIQUES
 
-- countries: 209
-- comm_code: 5047
-- commodities: 5031
+* countries has 209 unique entries
+* comm_code has 5047 unique entries
+* commodities has 5031 unique entries
 
+## Up do 200 instances of string values
 
 ### STRING: flow has 4 entries
 ```

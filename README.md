@@ -3,16 +3,35 @@
 
 ## Intro
 
-In the final project of the Data Engineering Nanodegree Udacity gave us the opportunity to select data sources for ourselves to build a data pipeline projecct.
-I chose to work with trade and climage change data.
+In the final project of the Data Engineering Nanodegree Udacity gave us the opportunity to select data sources for ourselves to build a data pipeline project.
 
-## Datasets and project goal
+I was interested in world development in terms of:
+* trade
+* climate change and ecological impact
+* population and health
+* food and nutrition
+* education
 
-The goal of this project is to import data from the datasets:
+I checked out datasets given in [research/_DataResearch.md](research/_DataResearch.md).
+For the sake of a realistic scope I limited myself to datasets involved with trade and temperature development. 
+
+## Datasets
+
+This are the datasets that I chose to work with:
 * Global Commodities and Trade Statistics of the United Nations (577.462 rows) [source](https://www.kaggle.com/unitednations/global-commodity-trade-statistics) and
 * Climate Change: Earth Surface Temperature Data from NOAA (8.225.871 rows) [source](https://www.kaggle.com/berkeleyearth/climate-change-earth-surface-temperature-data)
 
-into a joint data schema.
+In prepration for the staging tasks, I did expoloratory data analysis for, documented here:
+* [Global Commodities and Trade Statistics](notebooks/Data Exploration - Global Commodity Trade Statistics.ipynb) and
+* [ Climate Change: Earth Surface Temperature Data](notebooks/Data Exploration - Earth Surface Temperature Data.ipynb)
+
+Basic results (column count, names, data types, numeric value ranges, string examples and missing value analysis) can be found here:
+* [research/CommoditiesTrade.md](research/CommoditiesTrade.md)
+* [research/Temperatures.md](research/Temperatures.md)
+
+## Project Goal
+
+The project goal is to create a join data schema for the above selected datasets as well as a pipeline to import the data into it.
 
 ### Source files and location
 

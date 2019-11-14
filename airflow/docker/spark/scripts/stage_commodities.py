@@ -77,13 +77,8 @@ def spark_commodities_etl():
     ### Detect and remove nans
 
     string_columns = ['country_or_area', 'year', 'comm_code', 'commodity', 'flow', 'quantity_name', 'category']
-    number_columns = ['trade_usd', 'weight_kg', 'quantity']
-
-    ### Detect and remove nans
-
 
     print("Remove records with nan in String Columns")
-    col_names = df.columns
     count = df.count()
 
     for col_name in string_columns:
@@ -98,7 +93,6 @@ def spark_commodities_etl():
 
     print("Remove records with nan in Number Columns")
     at_least_one_factual_values = df.filter( df['trade_usd'].isNotNull() | df['weight_kg'].isNotNull() | df['quantity'].isNotNull())
-
 
     ### REMOVE DUPLICATES
 
@@ -115,7 +109,6 @@ def spark_commodities_etl():
     }
 
     # mode: can be 'overwrite' or 'append'
-    #at_least_one_factual_values.write.jdbc(url=db_url, mode='overwrite', table="commodities_staging", properties=db_properties)
 
     at_least_one_factual_values_no_dup.write \
         .format("jdbc") \
