@@ -23,6 +23,7 @@ pyspark = "*"
 tqdm = "*"
 docker-py = "*"
 docker = "*"
+s3fs = "*"
 
 [requires]
 python_version = "3.6"

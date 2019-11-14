@@ -7,6 +7,10 @@ from airflow.hooks.postgres_hook import PostgresHook
 
 
 def create_common_countries_table():
+    '''
+    Creates a common country_or_area table from commodities_staging and temperature_staging
+    '''
+
     table = "country_or_area"
     postgres_hook = PostgresHook(postgres_conn_id='postgres', schema='world')
     engine = postgres_hook.get_sqlalchemy_engine()

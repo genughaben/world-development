@@ -1,25 +1,42 @@
-
-#general
 import warnings
+import boto3
+import os
+import configparser
 warnings.filterwarnings('ignore')
 from airflow.hooks.postgres_hook import PostgresHook
-# data
 import pandas as pd
 
 
 def stage_global_temperatures():
+    '''
+    Staging of temperature data into temperature_staging table.
+
+    Reads GlobalLandTemperaturesByCountry.csv from S3, applys some transformation steps and loads the data into a
+    PostgreSQL DB
+    '''
+
     postgres_hook = PostgresHook(postgres_conn_id='postgres')
     engine = postgres_hook.get_sqlalchemy_engine()
 
-    print(dir(postgres_hook))
-    print("engine")
-    print(dir(engine))
-
     table = "temperature_staging"
     # path to file on client system
-    file_path = "/usr/local/airflow/dags/data/GlobalLandTemperaturesByCountry.csv"
 
-    df = pd.read_csv(file_path)
+    CONFIG_PATH = os.path.expanduser('~/config.cfg')
+    config = configparser.ConfigParser()
+    config.read(CONFIG_PATH)
+
+    s3 = boto3.client(
+        's3',
+        region_name='eu-central-1',
+        aws_access_key_id=config['AWS']['KEY'],
+        aws_secret_access_key=config['AWS']['SECRET']
+    )
+
+    s3_path = s3.get_object(Bucket='world-development', Key='input_data/GlobalLandTemperaturesByCountry.csv')['Body']
+
+    #file_path = "/usr/local/airflow/dags/data/GlobalLandTemperaturesByCountry.csv"
+
+    df = pd.read_csv(s3_path)
     print(f"Raw row count: {len(df)}.")
 
     check_cols_for_nan = ['dt', 'AverageTemperature', 'Country']
