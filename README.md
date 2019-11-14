@@ -40,26 +40,22 @@ The complete processes airflow DAG looks like this:
 
 An airflow DAG orchestrates the whole process. It consists of the following steps:
 
-1. Begin execution ... (does nothing but indicating the start of the process)
-2. (Re-)creates the target database constellation schema (executes DROP and CREATE SQL Statements) and the staging tables
-3. Staging (staging tables are not part of the final DB schema displayed below)
-    1. stage_commodities: Staging of Global Temperatures (executes a PythonOperator using pandas) into commodities_staging table
-    2. stage_temperatures: Staging of Global Commodities and Trade Statistics (executes a BashOperator that executes a Spark Job on a standalone cluster in docker in client mode) into temperature_staging table
-4. Create a joint countries and regions table from both sources staging tables:
-    1. translate_country_labels: rename country_and_area labels in commodities_staging and temperature_staging to a common set (ignoring 3 areas given in the trades statistics, and copying entires of temperature_staging for country_or_area labels close by for which not data was available in temperature_staging but in commodities_staging) and to common rules (i.e. translate Isds. to Islands) 
-    2. create_common_countries_table: unify country_and_area labels of both staging tables into one set and upload into the country_and_area table 
-5. Create dimensional tables from staged global trade statistics (flow, commodities, categories, quantities)
-6. Create facts table 'temperature' from staged global temperatures table and country_or_area table
-7. Create facts table 'trades' from staged global trade statistics and dimensional tables (country_or_area, flow, commodities, categories, quantities) and facts table temperatures
+1. *Begin_execution*: does nothing but indicating the start of the process.
+2. *Recreate_db_schema*: (Re-)creates the target database constellation schema (executes DROP and CREATE SQL Statements) and the staging tables.
+3. Staging (staging tables are not part of the final DB schema displayed below):
+    1. *stage_commodities*: Staging of Global Temperatures (executes a PythonOperator using pandas) into commodities_staging table
+    2. *stage_temperatures*: Staging of Global Commodities and Trade Statistics (executes a BashOperator that executes a Spark Job on a standalone cluster in docker in client mode) into temperature_staging table
+4. Create a joint country_and_area and regions table from both sources (temperature and commodities) staging tables:
+    1. *update_temperature_countries*: country_and_area labels in temperature_staging, according to [update_temperature_countries](airflow/dags/tasks/update_and_copy_countries.py), including rules like writing conjunctions in smaller case and 'Islands' instead of 'Isla' or 'Islds'.  
+    2. *copy_temperature_countries*: copy country_and_area labels in temperature_staging: for country_or_area labels present in commodities_staging but not in temperature_staging, entries of the geographically closest country_or_area where copied and named according to the label of the country_or_area label in commodities_staging. A list can be found here: [copy_temperature_countries](airflow/dags/tasks/update_and_copy_countries.py).  
+    3. *update_commodity_countries*: update country_and_area labels in temperature_staging, according to [update_commodity_countries](airflow/dags/tasks/update_and_copy_countries.py), including rules like writing 'Islands' instead of 'Isla' or 'Islds' or shortened country_or_area names (i.e. 'Bolivia (Plurinational State of)'  => 'Bolivia').
+    4. *create_common_countries_table*: unify country_and_area labels of temperature_staging and commodities_staging and input its data into the dimensional country_and_area table 
+5. *Load_dim_<dim_table_name>* with dim_table_name in (flow, commodities, categories, quantities). Creating dimensional tables from staged global trade statistics. 
+6. *Load_fact_temperatures_table*: Creates fact table 'temperatures' from temperature_staging and country_or_area table.
+7. *Load_fact_trades_table*: Create fact table 'trades' from commodities_staging and dimensional tables (country_or_area, flow, commodities, categories, quantities) and fact table 'temperatures'.
+8. *Check_data_quality*: Checks the number of records saved to the database by comparing these with expected values found in in dictionary [expected_table_counts](airflow/plugins/helpers/sql_queries.py).
 
-## Tooling
-
-THe following technologies where used in this projeccts that also have been part of the Nanodegrees programm:
-
-* Amazon S3 for file storage
-* PostgreSQL for data storage
-* Apache Spark for data processing
-* Apache Airflow for data orchestration
+The names in *cursiv* represent the task_ids of the tasks in the [world_dag.py](airflow/dags/world_dag.py) file. You can inspect these to see what (custom) operators and scripts have been used.
 
 ## Data schema
 
@@ -151,10 +147,14 @@ temperature_id     | INT     |      | temperatures
 You can find an outline of the current tech stack in the [docker-compose.yml](airflow/docker/docker-compose.yml)
 
 The current setup consists of:
-* **Apache Airflow** as pipeline orchestrator, run with a SequentialExecutor (one container (*postgres*) for the webservice and one container (*webserver*) for the configuration database)
-* **Apache Spark** as cluster computing framework, run as a stand-alone cluster (one container (*spark-master*) for one master node, one container (*spark-worker-1*) as worker node)
-* **PostgreSQL** as target database where the final data schema and the data result
-* **AWS S3** as storage for the input data
+* **Apache Airflow** as pipeline orchestrator, run with a SequentialExecutor: 
+  * a container (*webserver*) for the webservice: container is based on [puckel/docker-airflow](https://github.com/puckel/docker-airflow)_image, extend with info from this [medium article](https://medium.com/@thiagolcmelo/submitting-a-python-job-to-apache-spark-on-docker-b2bd19593a06), result can be found here: [Docker.airflow_spark](airflow/docker/Dockerfile.airflow_spark)
+  * a container (*postgres*) for the configuration database: postgres:9.6
+* **Apache Spark** as cluster computing framework, run as a stand-alone cluster:
+  * a container (*spark-master*) for one master node: based on [bde2020/spark-master:2.4.4-hadoop2.7](https://hub.docker.com/r/bde2020/spark-master/builds)  image
+  * a container (*spark-worker-1*) as worker node: based on [bde2020/spark-worker:2.4.4-hadoop2.7](https://hub.docker.com/r/bde2020/spark-worker/builds)
+* **PostgreSQL** as data storage for staged and finally processed data in above described schema, a container based on docker image: postgres:10.10-alpine 
+* **AWS S3** as file storage for the input data
 
 I choose this stack, as I wanted to create a locally executable version of the whole project, that with some adaptations (i.e. move to kubernetes) could be run in the cloud as well, i.e. AWS EKS. 
 
@@ -222,9 +222,9 @@ Primarily you need to add your AWS credentials to access S3.
 NB: config.cfg is automatically excluded from git repo. If you should use another name, add it got .gitignore and update config variable usage across project.
   
   
-# Local ETL
+# Execute ETL in docker
 
-## Local airflow + local target PostgreSQL in docker containers
+## airflow + target PostgreSQL in docker containers
 
 ### Setup:
 ```
@@ -234,57 +234,77 @@ NB: config.cfg is automatically excluded from git repo. If you should use anothe
 
 ### Start airflow / spark / target db locally:
 ```
-> cd airflow/local
-> docker-compose -f docker-compose-LocalExecutor.yml up (--force-recreate - to reinit dbs after docker-compose ...  down)
+> cd airflow/docker
+> docker-compose up
 ```
 
-### Stop airflow / spark / target db locally:
-```
-> docker-compose -f docker-compose-LocalExecutor.yml down
-```
+After starging, you can reach airflows UI in your browser entering: localhost:8080/admin.
 
-Now you can reach airflow in your browser entering: localhost:8080/admin.
 
-**Sources:** Installation is based on [https://github.com/puckel/docker-airflow]
-
-## Configure target PostgreSQL setup
-
-* Update init.sql in local/script folder as you please
-* Update requirements.txt as you please
-
-## Enter PostgreSQL in docker container:
-
-Make sure your docker-container is running
-```
-> docker exec -it local_db_1 bash
-bash> psql -U postgres
-```
-
-## Configure airflow via UI:
+### Configure airflow via UI:
 
 Goto localhost:8080/admin
 * Open Admin -> Connections
 * Create new connection with clicking on "Create"
   
-|Field    |Field value|
-|---------|-----------|
-|Conn Id  | postgres  |
-|Conn Type| Postgres  |
-|Host     | db        |
-|Schema   | dummy     |
-|Login    | postgres  |
-|Password | postgres  |
-|Port     | 5432      |
+|Field    |Field value |
+|---------|------------|
+|Conn Id  | postgres   |
+|Conn Type| Postgres   |
+|Host     | db         |
+|Schema   | world      |
+|Login    | genughaben |
+|Password | docker     |
+|Port     | 5432       |
+
+### Running ETL Job:
+
+* Swtich on 'world_dag'
+* Execute 'world_dag' by clicking on 'Trigger DAG'-button (first button in Links column)  
+
+### Stop airflow / spark / target db locally:
+```
+> docker-compose down
+```
+
+### To re-start with re-initializing postgres databases enter:
+
+```
+> docker-compose down
+> docker-compose up --force-recreate 
+```
+
+## Configuration and data inspection
+
+### Customize target PostgreSQL setup
+
+* Update init.sql in local/script folder as you please
 
 
-## DEVELOPMENT: SCRIPT BASED
+### Enter PostgreSQL in docker container:
+
+Make sure your docker-container is running
+```
+> docker exec -it local_db_1 bash
+bash> psql -U genughaben -d world
+```
+
+## Sources
+
+* **Airflow in docker:** The installation is based on [https://github.com/puckel/docker-airflow]
+
+
+# DEVELOPMENT: USING LOCAL POSTGRES DB AND SCRIPTS - NO AIRFLOW USAGE
+
+This section is for local development only. 
+Only necessary in case you are interested in writing commodities data into the PostgreSQL DB on your local machine.
 
 Prerequisits:
-* Make sure you have a local installation of PostgreSQL and its running. This means entering the following should not result in an error and open PostgreSQLs CLI:
+* Make sure you have a local installation of PostgreSQL and its running. See how-to here: [Development Utils](#development-utils)
 
-### PANDAS BASED (very slow)
+### PANDAS BASED (very slow, potentially instable)
 
-Login to postgresql CLI and create a Database called 'dummy'. 
+Login to Postgresql CLI and create a Database called 'dummy'. 
 
 ```
 > sudo -u postgres psql
@@ -299,15 +319,18 @@ Now you can execute:
 > python local-etl/create_table.py
 
 # execute ETL:
-> python local-etl/pandas-etl.py
+> python local-etl/commodities-pandas-etl.py
 ```
 
 ### SPARK BASED
+
+**NB: Only works if you have locally installed PySpark available!** 
+
 ```
-> sudo -u postgres psql
+> psql -U genughaben -d postgres
 
 # Now create a Databse if you have not done so alread:
-psql-cli> CREATE DATABASE world; 
+psql-cli> CREATE DATABASE dummy; 
 ```
 
 If you have customized your config.cfg as required you can run:
@@ -317,20 +340,49 @@ If you have customized your config.cfg as required you can run:
   
 to execute the spark based etl script.
 
-### SPARK CONTAINER:
-The spark container has its origin in the image of bde2020/spark-master:latest and is defined in   
-docker-compose-LocalExecutor.yml
-  
-It uses spark_jars defined in /spark_jars  
-and spark_scripts and config files in spark_scripts (mounted as volumes)  
-  
-Spark submit:  
+### EXECUTE SPARK JOB INSIDE DOCKER CONTAINER:
+
+First start the the container setup:
+
+```
+> cd airflow/docker
+> docker-compose up
+```
+    
+Submit Spark job from terminal outside docker:  
 ```
 # First enter container:
 >  docker exec -it local_spark_1 bash
 
 # Next execute spark script like so:
-> /spark/bin/spark-submit --master local[*] --driver-class-path /spark_jars/postgresql-42.2.8.jar /simple-app/stage_commodities.py
+> /spark/bin/spark-submit --master local[*] --driver-class-path spark/dependencies/postgresql-42.2.8.jar spark/scripts/stage_commodities.py
+```
+
+### SUBMIT SPARK JOB FROM TERMINAL TO SPARK IN DOCKER CONTAINER:
+
+First start the the container setup:
+
+```
+> cd airflow/docker
+> docker-compose up
+```
+
+In order to execute a Spark Job from your local terminal so that it runs in the docker container, you need the master nodes IP-Adress.
+You get it entering:
+
+```
+> docker ps
+# find the ID (first column) of the spark-master container
+> docker inspect <ID-of-spark-master-container>
+```
+
+You find the IP-Address on the bottom in: "Networks" => ... => "IPAddress"L <INPUT_SPARK_MASTER_CONTAINER_IP>
+
+In airflow/docker/spark/local_container_spark_submit.sh subsitute <INPUT_SPARK_MASTER_CONTAINER_IP> with the IP-Address.
+Now execute:
+
+```
+> bash local_container_spark_submit.sh
 ```
 
 
@@ -445,10 +497,6 @@ Helpful commands:
 | \c <database_name> | choose database for usage |
 |\dt | show tables |
 |\d <table_name> | show table schema|
-
-
-
-
 
 Further reading: 
 * https://blog.usejournal.com/testing-in-airflow-part-1-dag-validation-tests-dag-definition-tests-and-unit-tests-2aa94970570c
