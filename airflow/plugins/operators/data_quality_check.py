@@ -5,6 +5,12 @@ from helpers import expected_table_counts
 
 class DataQualityOperator(BaseOperator):
 
+    '''DataQualityOperator
+
+     This operator checks for every table whose names it gets passed as a list of strings, if its total count compares
+     to a value defined in expected_table_counts found in helpers.
+     '''
+
     ui_color = '#89DA59'
 
     @apply_defaults

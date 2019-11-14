@@ -1,4 +1,8 @@
 update_temperature_countries = {
+    '''
+    A dict used to update country_or_area labels in the temperature_staging table
+    '''
+    
     # update temperature country labels
     # previous                          : new
     'Antigua And Barbuda'               : 'Antigua and Barbuda',
@@ -28,6 +32,10 @@ update_temperature_countries = {
 }
 
 copy_temperature_countries = {
+    '''
+    A dict used to copy temperature_staging entries for some country_or_area labels 
+    '''
+
   # 'copy'                          : 'existing'
     'Brunei'                        : 'Malaysia',
     'Cook Islands'                  : 'French Polynesia',
@@ -44,6 +52,10 @@ copy_temperature_countries = {
 }
 
 update_commodity_countries = {
+    '''
+    A dict used to update country_or_area labels in the commodities_staging table
+    '''
+    
     # update temperature country labels
     # previous                          : new
     'Belgium-Luxembourg'                : 'Belgium',

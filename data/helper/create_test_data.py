@@ -1,4 +1,11 @@
-import os
+'''
+This script helps to create test data.
+For an original_file_path pointing to a big CSV resource, it creates a smaller variant, tanking <chunk_size> number
+of rows every >line_copy_offset> lines.
+
+E.g. of a CSV files containing 2040 rows, it creates a new file with 40 rows (row 1-20 and 2001-2020 of the original rows).
+'''
+
 from tqdm import tqdm
 
 line_copy_offset = 2000

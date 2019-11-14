@@ -6,6 +6,12 @@ from helpers import re_create_database_schema
 
 class CreateDatabaseSchema(BaseOperator):
 
+    '''CopyTableRowsOperator
+
+    This operator executes re_create_database_schema found in helpers.
+    It drops and creates a there defined data schema.
+    '''
+
     ui_color = '#998866'
 
     @apply_defaults

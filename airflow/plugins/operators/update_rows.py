@@ -5,6 +5,14 @@ from helpers import create_row_update_query
 
 class UpdateTableRowsOperator(BaseOperator):
 
+    '''UpdateTableRowsOperator
+
+    This operator updates column names.
+    Values in update_dict are used to update column names.
+    Values in update_dict of format { previous_name: new_name } are used.
+    Every <column> with value <previous_name> is replaced with <new_name> for every entry in the dict.
+    '''
+
     ui_color = '#ffcccc'
 
     @apply_defaults

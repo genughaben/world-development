@@ -37,11 +37,11 @@ def create_spark_sql_context():
 
 def log(df, tab='', msg='', verbose=True):
     ''' Prints schema and count of df as well as a optional message if verbose is True.
-    Keyword arguments:
-    * df            -- Spark dataframe.
-    * tab           -- string: table name
-    * msg           -- string: optional message
-    * verbose       -- boolean
+    Arguments:
+    df            -- Spark dataframe.
+    tab           -- string: table name
+    msg           -- string: optional message
+    verbose       -- boolean
     '''
 
     if verbose:
@@ -51,7 +51,17 @@ def log(df, tab='', msg='', verbose=True):
         print(f'count({tab}): {df.count()}')
 
 
-def process_commodities(sqlContext, db_url, db_properties, input_data, verbose=False):
+def process_commodities(sqlContext, db_url, db_properties, input_data):
+    '''
+    Reads commodties CSV file into commodities_staging table.
+
+    Arguments:
+    sqlContext      -- an SQL context
+    db_url          -- url to a PostgreSQL DB
+    db_properties   -- dict containing info about PostgreSQL DB connection
+    input_data      -- path to CSV file
+
+    '''
 
     ### READ CSV to PySpark DataFrame
     schema = StructType([
@@ -101,6 +111,9 @@ def process_commodities(sqlContext, db_url, db_properties, input_data, verbose=F
 
 
 def main():
+    '''
+    Executes process_commodities Spark Job
+    '''
     sqlContext = create_spark_sql_context()
 
     db_prop = config['POSTGRESQL']

@@ -5,6 +5,14 @@ from helpers import copy_rows_queries
 
 class CopyTableRowsOperator(BaseOperator):
 
+    '''CopyTableRowsOperator
+
+    This operator copies entries of a table.
+    Values in copy_dict of format { copy_name: existing_value_to_copy } are used.
+    Every <column> of <table> with value <existing_value_to_copy> is copied to a new record where only <copy_name> is
+    replaced in <column> for every entry in the dict.
+    '''
+
     ui_color = '#ccccff'
 
     @apply_defaults

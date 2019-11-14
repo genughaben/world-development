@@ -5,6 +5,12 @@ from helpers import insert_table_queries
 
 class LoadTableOperator(BaseOperator):
 
+    '''LoadTableOperator
+
+     This operator loads data into a table if its insert statment was specified in insert_table_queries.
+     It can either replace the currently existing data or append it.
+     '''
+
     ui_color = '#80BD9E'
 
     @apply_defaults

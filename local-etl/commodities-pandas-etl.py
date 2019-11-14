@@ -8,10 +8,13 @@ from sqlalchemy import create_engine
 
 
 def process_commodities(engine, filepath):
-    """Processes song files.
-     Creates and executes insert queries for songs and artists table.
+    """
+    Processes song files.
+
+    Creates and process_commodities insert queries for songs and artists table.
+
     Arguments:
-    cur -- cursor on a database connection
+    engine -- engine for on a database
     filepath -- a path to a json file
     """
     start_time = time()

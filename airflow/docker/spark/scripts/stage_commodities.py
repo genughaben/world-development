@@ -49,6 +49,10 @@ def create_spark_sql_context():
     return sqlContext
 
 def spark_commodities_etl():
+    '''
+    Reads commodties CSV file into commodities_staging table.
+    '''
+
     sqlContext = create_spark_sql_context()
 
     #commodities_data_path = "s3a://world-development/input_data/test/commodity_trade_statistics_data.csv"

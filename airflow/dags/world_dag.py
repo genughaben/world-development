@@ -12,6 +12,11 @@ from tasks.create_common_countries_table import create_common_countries_table
 from airflow.operators import (CreateDatabaseSchema, LoadTableOperator, DataQualityOperator, \
                                UpdateTableRowsOperator, CopyTableRowsOperator)
 
+'''
+World DAG - Airflow DAG
+
+Orchestrates the whole process of ETL of temperature and commodities data, data schema creation and data import.
+'''
 
 default_args = {
     'owner': "world",
@@ -77,13 +82,6 @@ update_commodity_countries_task = UpdateTableRowsOperator(
     update_dict=update_commodity_countries,
     dag=dag
 )
-
-
-# translate_country_labels_task = PythonOperator(
-#     task_id="update_and_copy_country_labels",
-#     python_callable=update_and_copy_country_labels,
-#     dag=dag
-# )
 
 create_common_countries_table_task = PythonOperator(
     task_id='create_common_countries_table',
