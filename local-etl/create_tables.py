@@ -4,8 +4,6 @@ from sql_queries import create_table_queries, drop_table_queries
 from sqlalchemy import create_engine
 
 
-
-
 def create_database(db_prop):
     """Creates database.
     Connects to database. Drops existing and recreates database.
@@ -67,7 +65,7 @@ def main():
         pass
 
     config = configparser.ConfigParser()
-    config.read('../config.cfg')
+    config.read('../config_local.cfg')
     input_data = config['PATH']['COMMODITIES_DATA']
 
     db_prop = config['POSTGRESQL']
