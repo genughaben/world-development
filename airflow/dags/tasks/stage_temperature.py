@@ -1,6 +1,7 @@
 import warnings
 import boto3
 import os
+import numpy as np
 import configparser
 warnings.filterwarnings('ignore')
 from airflow.hooks.postgres_hook import PostgresHook
@@ -11,7 +12,7 @@ def stage_global_temperatures():
     '''
     Staging of temperature data into temperature_staging table.
 
-    Reads GlobalLandTemperaturesByCountry.csv from S3, applys some transformation steps and loads the data into a
+    Reads GlobalLandTemperaturesByCountry.csv from S3, applies some transformation steps and loads the data into a
     PostgreSQL DB
     '''
 
@@ -63,14 +64,29 @@ def stage_global_temperatures():
 
     # aggregate (mean) temp and uncertainty by year and country
 
-    surface_temp_by_year_and_country = df_no_dup_with_year \
+    df = df_no_dup_with_year \
                                             .groupby(['year', 'Country'],as_index=False) \
                                             .agg({ 'AverageTemperature': 'mean', \
                                                    'AverageTemperatureUncertainty': 'mean' \
                                                  })
 
-    surface_temp_by_year_and_country = surface_temp_by_year_and_country.rename(
+    df = df.rename(
         columns={"Country": "country_or_area", "AverageTemperature": "temperature",
                  "AverageTemperatureUncertainty": "uncertainty"})
 
-    surface_temp_by_year_and_country.to_sql(table, engine, index=False, if_exists="replace")
+    df['rank'] = np.nan
+
+    # add temperature rank for every year by temperature: 1: hottest -> coldest.
+
+    years = df['year'].unique()
+
+    for year in years:
+        year_data = df[df['year'] == year]
+        sorted_year_data = year_data.sort_values('temperature')
+        sorted_year_data['rank'] = sorted_year_data['temperature'].rank(ascending=False)
+
+        for i in sorted_year_data.index:
+            rank = sorted_year_data.at[i, 'rank']
+            df.at[i, 'rank'] = rank
+
+    df.to_sql(table, engine, index=False, if_exists="replace")

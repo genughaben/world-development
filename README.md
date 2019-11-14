@@ -53,7 +53,7 @@ Finally a data quality check is used to check that data has been ETLed as expect
 
 The complete processes airflow DAG looks like this:
 
-![World Database Schema](img/World_DAG.png "World Database ETL Process")
+![World Database Schema](img/World_DAG_v2.png "World Database ETL Process")
 
 ### Process description:
 
@@ -62,13 +62,13 @@ An airflow DAG orchestrates the whole process. It consists of the following step
 1. *Begin_execution*: does nothing but indicating the start of the process.
 2. *Recreate_db_schema*: (Re-)creates the target database constellation schema (executes DROP and CREATE SQL Statements) and the staging tables.
 3. Staging (staging tables are not part of the final DB schema displayed below):
-    1. *stage_commodities*: Staging of Global Temperatures (executes a PythonOperator using pandas) into commodities_staging table
-    2. *stage_temperatures*: Staging of Global Commodities and Trade Statistics (executes a BashOperator that executes a Spark Job on a standalone cluster in docker in client mode) into temperature_staging table
+    1. *stage_commodities*: Staging of Global Temperatures (executes a PythonOperator using pandas) into commodities_staging table.
+    2. *stage_temperatures*: Staging of Global Commodities and Trade Statistics (executes a BashOperator that executes a Spark Job on a standalone cluster in docker in client mode) into temperature_staging table.
 4. Create a joint country_and_area and regions table from both sources (temperature and commodities) staging tables:
     1. *update_temperature_countries*: country_and_area labels in temperature_staging, according to [update_temperature_countries](airflow/dags/tasks/update_and_copy_countries.py), including rules like writing conjunctions in smaller case and 'Islands' instead of 'Isla' or 'Islds'.  
     2. *copy_temperature_countries*: copy country_and_area labels in temperature_staging: for country_or_area labels present in commodities_staging but not in temperature_staging, entries of the geographically closest country_or_area where copied and named according to the label of the country_or_area label in commodities_staging. A list can be found here: [copy_temperature_countries](airflow/dags/tasks/update_and_copy_countries.py).  
     3. *update_commodity_countries*: update country_and_area labels in temperature_staging, according to [update_commodity_countries](airflow/dags/tasks/update_and_copy_countries.py), including rules like writing 'Islands' instead of 'Isla' or 'Islds' or shortened country_or_area names (i.e. 'Bolivia (Plurinational State of)'  => 'Bolivia').
-    4. *create_common_countries_table*: unify country_and_area labels of temperature_staging and commodities_staging and input its data into the dimensional country_and_area table 
+    4. *create_common_countries_table*: unify country_and_area labels of temperature_staging and commodities_staging and input its data into the dimensional country_and_area table. 
 5. *Load_dim_<dim_table_name>* with dim_table_name in (flow, commodities, categories, quantities). Creating dimensional tables from staged global trade statistics. 
 6. *Load_fact_temperatures_table*: Creates fact table 'temperatures' from temperature_staging and country_or_area table.
 7. *Load_fact_trades_table*: Create fact table 'trades' from commodities_staging and dimensional tables (country_or_area, flow, commodities, categories, quantities) and fact table 'temperatures'.
@@ -143,6 +143,7 @@ country_or_area_id |  INT  |      | country_or_area
 year               |  INT  |      |
 temperature        | FLOAT |      |
 certainty          | FLOAT |      |
+rank               | FLOAT |      |
 
 table: `trades`
 
@@ -384,7 +385,7 @@ First start the the container setup:
 > docker-compose up
 ```
 
-In order to execute a Spark Job from your local terminal so that it runs in the docker container, you need the master nodes IP-Adress.
+In order to execute a Spark Job from your local terminal so that it runs in the docker container, you need the master nodes IP-Address.
 You get it entering:
 
 ```
@@ -395,7 +396,7 @@ You get it entering:
 
 You find the IP-Address on the bottom in: "Networks" => ... => "IPAddress"L <INPUT_SPARK_MASTER_CONTAINER_IP>
 
-In airflow/docker/spark/local_container_spark_submit.sh subsitute <INPUT_SPARK_MASTER_CONTAINER_IP> with the IP-Address.
+In airflow/docker/spark/local_container_spark_submit.sh substitute <INPUT_SPARK_MASTER_CONTAINER_IP> with the IP-Address.
 Now execute:
 
 ```

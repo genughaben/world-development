@@ -33,7 +33,8 @@ staging_temperature_table_create = ("""
         year                INT,
         country_or_area     VARCHAR,
         temperature         FLOAT,
-        uncertainty         FLOAT
+        uncertainty         FLOAT,
+        rank                FLOAT
     );
 """)
 
@@ -86,7 +87,8 @@ fact_temperatures_table_create = ("""
         year                INT,
         country_or_area_id  INT,
         temperature         FLOAT,
-        uncertainty         FLOAT
+        uncertainty         FLOAT,
+        rank                FLOAT
     );
 """)
 
@@ -154,13 +156,15 @@ fact_temperatures_table_insert = ("""
         year,
         country_or_area_id,
         temperature,
-        uncertainty
+        uncertainty,
+        rank
     ) 
     SELECT DISTINCT
         ts.year,
         c.country_or_area_id,
         ts.temperature,
-        ts.uncertainty
+        ts.uncertainty,
+        ts.rank
     FROM temperature_staging ts LEFT OUTER JOIN country_or_area c
     ON ts.country_or_area = c.country_or_area;
 """)
