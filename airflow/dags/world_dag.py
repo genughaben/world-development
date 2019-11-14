@@ -120,14 +120,14 @@ load_commodities_table = LoadTableOperator(
 )
 
 load_temperatures_table = LoadTableOperator(
-    task_id="Load_dim_temperatures_table",
+    task_id="Load_fact_temperatures_table",
     postgres_conn_id="postgres",
     table="temperatures",
     dag=dag
 )
 
 load_trades_table = LoadTableOperator(
-    task_id="Load_dim_trades_table",
+    task_id="Load_fact_trades_table",
     postgres_conn_id="postgres",
     table="trades",
     dag=dag
