@@ -2,6 +2,10 @@
 
 This file contains info sources and tricks
 
+## Create smaller test data
+
+Use this script: [data/helper/create_test_data.py](data/helper/create_test_data.py).
+
 ## Open Issues and Recherche
 
 ### Using Spark and Airflow on AWS
