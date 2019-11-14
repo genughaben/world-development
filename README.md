@@ -13,7 +13,7 @@ I was interested in world development in terms of:
 * education
 
 I checked out datasets given in [research/_DataResearch.md](research/_DataResearch.md).
-For the sake of a realistic scope I limited myself to datasets involved with trade and temperature development. 
+For the sake of a realistic scope I limited myself to datasets involved with trades and temperature per year. 
 
 ## Datasets
 
@@ -21,23 +21,13 @@ This are the datasets that I chose to work with:
 * Global Commodities and Trade Statistics of the United Nations (577.462 rows) [source](https://www.kaggle.com/unitednations/global-commodity-trade-statistics) and
 * Climate Change: Earth Surface Temperature Data from NOAA (8.225.871 rows) [source](https://www.kaggle.com/berkeleyearth/climate-change-earth-surface-temperature-data)
 
-In prepration for the staging tasks, I did expoloratory data analysis for, documented here:
+In preparation for the staging tasks, I did exploratory data analysis for both datasets, documented here:
 * [Global Commodities and Trade Statistics](notebooks/Data Exploration - Global Commodity Trade Statistics.ipynb) and
 * [ Climate Change: Earth Surface Temperature Data](notebooks/Data Exploration - Earth Surface Temperature Data.ipynb)
 
-Basic results (column count, names, data types, numeric value ranges, string examples and missing value analysis) can be found here:
+Basic results (column count, names, data types, numeric value ranges, string examples and missing value analysis) can also be found here:
 * [research/CommoditiesTrade.md](research/CommoditiesTrade.md)
 * [research/Temperatures.md](research/Temperatures.md)
-
-## Project Goal
-
-The project goal is to create a joint data schema for the above selected datasets as well as a pipeline to import the data into it.
-Possible use cases are: 
-* Which countries where the hottest over the years?
-* What is the top imported/exported commodity in by country and year
-* Main commodity imported/exported by trade_usd for the hottest/coldest countries 
-
-Some results using the finished database can be viewed here: [World Development Use Cases](notebooks/World Development Use Case.ipynb)
 
 ### Source files and location
 
@@ -47,6 +37,16 @@ The source data consists of two CSV files:
 
 that have been uploaded to AWS S3 for access. 
 
+## Project Goal
+
+The project goal is to create a joint data schema for the above selected datasets as well as a pipeline to import the data into it.
+Possible use cases are: 
+* Which countries where the hottest over the years?
+* What is the top imported/exported commodity by country and year
+* What is the main commodity imported/exported by trade_usd by the hottest/coldest countries? 
+
+Some results using the finished database can be viewed here: [World Development Use Cases](notebooks/World Development Use Case.ipynb)
+
 ## Project Scope
 
 The raw data is downloaded from kaggle and uploaded to S3.
@@ -55,7 +55,7 @@ Therefore data is staged - using Spark for the trades data and pandas for the te
 Subsequently a common dimension table for country_and_area has been devised - partly by hand.
 Next more dimensional tables and ultimately fact tables have been created automatically.
 
-Finally a data quality check is used to check that data has been ETLed as expected.
+Finally, a data quality check is used to check that data has been ETLed as expected.
 
 The complete processes airflow DAG looks like this:
 
@@ -65,20 +65,21 @@ The complete processes airflow DAG looks like this:
 
 An airflow DAG orchestrates the whole process. It consists of the following steps:
 
-1. *Begin_execution*: does nothing but indicating the start of the process.
-2. *Recreate_db_schema*: (Re-)creates the target database constellation schema (executes DROP and CREATE SQL Statements) and the staging tables.
-3. Staging (staging tables are not part of the final DB schema displayed below):
-    1. *stage_commodities*: Staging of Global Temperatures (executes a PythonOperator using pandas) into commodities_staging table.
-    2. *stage_temperatures*: Staging of Global Commodities and Trade Statistics (executes a BashOperator that executes a Spark Job on a standalone cluster in docker in client mode) into temperature_staging table.
+1. *Begin_execution*: does nothing but indicating the start of the pipepline.
+2. *Recreate_db_schema*: (Re-)creates the target database's constellation schema (executes DROP and CREATE SQL Statements) and the staging tables.
+3. Staging (**NB: staging tables are not part of the final DB schema displayed below)**):
+    1. *stage_commodities*: Staging of the global temperatures data (executes a PythonOperator using pandas) into temperature_staging table.
+    2. *stage_temperatures*: Staging of global commodities and trade statistics data (executes a BashOperator that executes a Spark Job, run on a standalone cluster in docker in client mode) into commodities_staging table.
 4. Create a joint country_and_area and regions table from both sources (temperature and commodities) staging tables:
     1. *update_temperature_countries*: country_and_area labels in temperature_staging, according to [update_temperature_countries](airflow/dags/tasks/update_and_copy_countries.py), including rules like writing conjunctions in smaller case and 'Islands' instead of 'Isla' or 'Islds'.  
-    2. *copy_temperature_countries*: copy country_and_area labels in temperature_staging: for country_or_area labels present in commodities_staging but not in temperature_staging, entries of the geographically closest country_or_area where copied and named according to the label of the country_or_area label in commodities_staging. A list can be found here: [copy_temperature_countries](airflow/dags/tasks/update_and_copy_countries.py).  
+    2. *copy_temperature_countries*: copy country_and_area labels in temperature_staging: for country_or_area labels present in commodities_staging, but not in temperature_staging, entries of the geographically closest country_or_area where copied and named according to the country_or_area label in commodities_staging. A list can be found here: [copy_temperature_countries](airflow/dags/tasks/update_and_copy_countries.py).  
     3. *update_commodity_countries*: update country_and_area labels in temperature_staging, according to [update_commodity_countries](airflow/dags/tasks/update_and_copy_countries.py), including rules like writing 'Islands' instead of 'Isla' or 'Islds' or shortened country_or_area names (i.e. 'Bolivia (Plurinational State of)'  => 'Bolivia').
     4. *create_common_countries_table*: unify country_and_area labels of temperature_staging and commodities_staging and input its data into the dimensional country_and_area table. 
 5. *Load_dim_<dim_table_name>* with dim_table_name in (flow, commodities, categories, quantities). Creating dimensional tables from staged global trade statistics. 
 6. *Load_fact_temperatures_table*: Creates fact table 'temperatures' from temperature_staging and country_or_area table.
 7. *Load_fact_trades_table*: Create fact table 'trades' from commodities_staging and dimensional tables (country_or_area, flow, commodities, categories, quantities) and fact table 'temperatures'.
 8. *Check_data_quality*: Checks the number of records saved to the database by comparing these with expected values found in in dictionary [expected_table_counts](airflow/plugins/helpers/sql_queries.py).
+9. *End_execution*: does nothing but indicating the end of the pipeline.
 
 The names in *cursiv* represent the task_ids of the tasks in the [world_dag.py](airflow/dags/world_dag.py) file. You can inspect these to see what (custom) operators and scripts have been used.
 
@@ -172,7 +173,7 @@ temperature_id     | INT     |      | temperatures
 
 You can find an outline of the current tech stack in the [docker-compose.yml](airflow/docker/docker-compose.yml)
 
-The current setup consists of:
+It consits of:
 * **Apache Airflow** as pipeline orchestrator, run with a SequentialExecutor: 
   * a container (*webserver*) for the webservice: container is based on [puckel/docker-airflow](https://github.com/puckel/docker-airflow)_image, extend with info from this [medium article](https://medium.com/@thiagolcmelo/submitting-a-python-job-to-apache-spark-on-docker-b2bd19593a06), result can be found here: [Docker.airflow_spark](airflow/docker/Dockerfile.airflow_spark)
   * a container (*postgres*) for the configuration database: postgres:9.6
@@ -196,7 +197,7 @@ In this project the Spark integration is using a stand-alone cluster with one ma
 This could be extended by adding more worker nodes. For best performance also the [stage_commodities.py](airflow/docker/spark/scripts/stage_commodities.py) can be optimized.
 And obviously if this was not enough to be run on a single machine based on the docker-compose.yml a kubernetes implementation could be built and run on AWS or GCP.  
 Postgres could manage 100x (100 GB in this case). 
-But in order to be highly available a multi-machine setup couldb be used. 
+But in order to be highly available a multi-machine setup could be used. 
 Also AWS Redshift could be used as Cloud alternative to easily be able to also work with 1000x data. 
 This wouldn't be to hard to achieve: 
 * An AWS Redshift cluster of appropriate size needed to be setup
