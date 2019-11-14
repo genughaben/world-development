@@ -31,7 +31,13 @@ Basic results (column count, names, data types, numeric value ranges, string exa
 
 ## Project Goal
 
-The project goal is to create a join data schema for the above selected datasets as well as a pipeline to import the data into it.
+The project goal is to create a joint data schema for the above selected datasets as well as a pipeline to import the data into it.
+Possible use cases are: 
+* Which countries where the hottest over the years?
+* What is the top imported/exported commodity in by country and year
+* Main commodity imported/exported by trade_usd for the hottest/coldest countries 
+
+Some results using the finished database can be viewed here: [World Development Use Cases](notebooks/World Development Use Case.ipynb)
 
 ### Source files and location
 

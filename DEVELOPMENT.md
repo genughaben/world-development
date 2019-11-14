@@ -42,6 +42,10 @@ Profiling / Make Pandas quicker:
 * https://towardsdatascience.com/speed-up-jupyter-notebooks-20716cbe2025
 
 
+### SQL:
+
+**Good article about window functions**: [link](https://spin.atomicobject.com/2016/03/12/select-top-n-per-group-postgresql/)
+
 ## Tricks:
 
 Spark
