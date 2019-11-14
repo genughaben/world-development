@@ -222,17 +222,17 @@ Primarily you need to add your AWS credentials to access S3.
 NB: config.cfg is automatically excluded from git repo. If you should use another name, add it got .gitignore and update config variable usage across project.
   
   
-# Execute ETL in docker
+## Execute ETL in docker
 
-## airflow + target PostgreSQL in docker containers
+### airflow + target PostgreSQL in docker containers
 
-### Setup:
+#### Setup:
 ```
 > docker build --rm --build-arg AIRFLOW_DEPS="datadog,dask" -t puckel/docker-airflow .
 > docker build --rm --build-arg PYTHON_DEPS="flask_oauthlib>=0.9" -t puckel/docker-airflow .
 ```
 
-### Start airflow / spark / target db locally:
+#### Start Airflow, Spark and the target PostgreSQL DB with docker-compose:
 ```
 > cd airflow/docker
 > docker-compose up
@@ -241,7 +241,7 @@ NB: config.cfg is automatically excluded from git repo. If you should use anothe
 After starging, you can reach airflows UI in your browser entering: localhost:8080/admin.
 
 
-### Configure airflow via UI:
+#### Configure airflow via UI:
 
 Goto localhost:8080/admin
 * Open Admin -> Connections
@@ -257,31 +257,33 @@ Goto localhost:8080/admin
 |Password | docker     |
 |Port     | 5432       |
 
-### Running ETL Job:
+#### Running ETL Job:
 
-* Swtich on 'world_dag'
+* Switch on 'world_dag'
 * Execute 'world_dag' by clicking on 'Trigger DAG'-button (first button in Links column)  
 
-### Stop airflow / spark / target db locally:
+
+#### Stop airflow / spark / target db locally:
 ```
 > docker-compose down
 ```
 
-### To re-start with re-initializing postgres databases enter:
+#### To re-start with re-initializing postgres databases enter:
 
 ```
 > docker-compose down
 > docker-compose up --force-recreate 
 ```
 
-## Configuration and data inspection
 
-### Customize target PostgreSQL setup
+### Configuration and data inspection
+
+#### Customize target PostgreSQL setup
 
 * Update init.sql in local/script folder as you please
 
 
-### Enter PostgreSQL in docker container:
+#### Enter PostgreSQL in docker container:
 
 Make sure your docker-container is running
 ```
@@ -289,12 +291,8 @@ Make sure your docker-container is running
 bash> psql -U genughaben -d world
 ```
 
-## Sources
 
-* **Airflow in docker:** The installation is based on [https://github.com/puckel/docker-airflow]
-
-
-# DEVELOPMENT: USING LOCAL POSTGRES DB AND SCRIPTS - NO AIRFLOW USAGE
+# Development: Using local PostgreSQL DB and scripts - no Airflow usage
 
 This section is for local development only. 
 Only necessary in case you are interested in writing commodities data into the PostgreSQL DB on your local machine.
@@ -302,7 +300,7 @@ Only necessary in case you are interested in writing commodities data into the P
 Prerequisits:
 * Make sure you have a local installation of PostgreSQL and its running. See how-to here: [Development Utils](#development-utils)
 
-### PANDAS BASED (very slow, potentially instable)
+### Pandas-based (very slow, potentially instable)
 
 Login to Postgresql CLI and create a Database called 'dummy'. 
 
@@ -322,7 +320,7 @@ Now you can execute:
 > python local-etl/commodities-pandas-etl.py
 ```
 
-### SPARK BASED
+### Spark-based
 
 **NB: Only works if you have locally installed PySpark available!** 
 
@@ -340,7 +338,7 @@ If you have customized your config.cfg as required you can run:
   
 to execute the spark based etl script.
 
-### EXECUTE SPARK JOB INSIDE DOCKER CONTAINER:
+### Execute Spark Job inside docker container
 
 First start the the container setup:
 
@@ -358,7 +356,7 @@ Submit Spark job from terminal outside docker:
 > /spark/bin/spark-submit --master local[*] --driver-class-path spark/dependencies/postgresql-42.2.8.jar spark/scripts/stage_commodities.py
 ```
 
-### SUBMIT SPARK JOB FROM TERMINAL TO SPARK IN DOCKER CONTAINER:
+### Submit Spark Job from terminal to Spark in docker container
 
 First start the the container setup:
 
