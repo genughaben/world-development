@@ -1,5 +1,7 @@
 # DEVELOPMENT LOG
 
+This file contains info sources and tricks
+
 ## Open Issues and Recherche
 
 ### Using Spark and Airflow on AWS
