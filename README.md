@@ -36,6 +36,7 @@ The source data consists of two CSV files:
 * GlobalTemperatures.csv (21.6 MB)
 
 that have been uploaded to AWS S3 for access. 
+For uploading this script was used: [data/helper/load_to_s3.py](data/helper/load_to_s3.py).
 
 ## Project Goal
 
