@@ -23,7 +23,6 @@ def eda(dataframe):
     print(f'dataframe index:\n {dataframe.index}\n')
     print(f'dataframe types:\n {dataframe.dtypes}\n')
     print(f'dataframe shape:\n {dataframe.shape}\n')
-    print(f'dataframe index:\n {dataframe.index}\n')
     print(f'dataframe describe:ń {dataframe.describe()}\n')
     print(f'unique values:\n')
     for item in dataframe:
